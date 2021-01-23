@@ -101,17 +101,32 @@ DWORD WINAPI MainLoopThread( LPVOID arg )
     mainLoop();
 
 
+    self.isExist = FALSE;
+    enemy.isExist = FALSE;
+    for( i = 0; i < MAX_BULLET_NUM; i++ )
+    {
+        bullet[ i ].isExist = FALSE;
+    }
+    for( i = 0; i < MAX_TARGET_NUM; i++ )
+    {
+        target[ i ].isExist = FALSE;
+    }
     //結果画面
     background.isExist = TRUE;
     if( point_self > point_enemy )
     {
-        /* background.type = 自分が勝った画面 */
+        background.type = TYPE_SELF_WIN;
     }
     else
     {
-        /* background.type = 敵が勝った画面 */
+        background.type = TYPE_ENEMY_WIN;
     }
 
+    Sleep( 1000 );
+    while( self_mouse.click_left == FALSE )
+    {
+        Sleep( 10 );
+    }
 
     ( void )arg;
 
@@ -213,7 +228,7 @@ void mainLoop( void )
                     target[ i ].y = 0;
                     target[ i ].x = rand() % ( DISPLAY_MAX_CHAR_X / 2 ) + DISPLAY_MAX_CHAR_X / 4;
                     //的の種類をランダムに生成
-                    switch( rand() & 0x03 )
+                    /*switch( rand() & 0x03 )
                     {
                         case 0x00:
                             target[ i ].type = TYPE_TARGET1;
@@ -235,7 +250,10 @@ void mainLoop( void )
                             target[ i ].size_x = 4;
                             target[ i ].size_y = 2;
                             break;
-                    }
+                    }*/
+                    target[ i ].type = TYPE_TARGET1;
+                    target[ i ].size_x = 10;
+                    target[ i ].size_y = 5;
                     break;
                 }
             }

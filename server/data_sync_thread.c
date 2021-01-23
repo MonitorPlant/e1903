@@ -5,10 +5,11 @@
 #include "../common/object.h"
 #include "data_sync_thread.h"
 
-extern CommonObject map_source;
+extern CommonObject background;
 extern CommonObject self, enemy;
 extern CommonObject target[ MAX_TARGET_NUM ];
 extern CommonObject bullet[ MAX_BULLET_NUM ];
+extern CommonObject number[8];
 extern MouseState self_mouse, enemy_mouse;
 
 extern BOOL end_program;
@@ -31,6 +32,9 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 	BOOL yes = 1;
     char send_data[6];
     char receive_data[4];
+
+	Sleep( 2000 );
+	enemy.isExist = TRUE;
 	
 	//初期化
 	WSAStartup( MAKEWORD( 2, 0 ), &wsaData );

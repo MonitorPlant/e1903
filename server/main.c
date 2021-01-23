@@ -6,10 +6,11 @@
 #include "data_sync_thread.h"
 #include "../common/object.h"
 
-CommonObject map_source;
+CommonObject background;
 CommonObject self, enemy;
 CommonObject target[ MAX_TARGET_NUM ];
 CommonObject bullet[ MAX_BULLET_NUM ];
+CommonObject number[8];
 MouseState self_mouse, enemy_mouse;
 
 BOOL end_program = FALSE; //プログラム終了もしくは強制終了
@@ -25,17 +26,38 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     HANDLE GraphicsThreadHandle, DataSyncThreadHandle, MainLoopThreadHandle;
 
     //各変数の初期化
-    map_source.isExist = TRUE;
-    map_source.isChanging = FALSE;
+    background.isExist = TRUE;
+    background.isChanging = FALSE;
     self.isExist = enemy.isExist = FALSE;
     self.isChanging = enemy.isChanging = FALSE;
-    self.x = enemy.x = DISPLAY_MAX_CHAR_Y / 2;
-    self.y = DISPLAY_MAX_CHAR_X / 4;
-    enemy.y = DISPLAY_MAX_CHAR_X / 2;
+    self.y = enemy.y = DISPLAY_MAX_CHAR_Y / 2;
+    self.x = DISPLAY_MAX_CHAR_X / 4;
+    enemy.x = DISPLAY_MAX_CHAR_X * 3 / 2;
+    self.size_x = enemy.size_x = 30;
+    self.size_y = enemy.size_y = 15;
     self_mouse.click_left = self_mouse.click_right = self_mouse.click_wheel = FALSE;
     self_mouse.click_left_pass = self_mouse.click_wheel_pass = FALSE;
     enemy_mouse.click_left = enemy_mouse.click_right = enemy_mouse.click_wheel = FALSE;
     enemy_mouse.click_left_pass = enemy_mouse.click_wheel_pass = FALSE;
+
+    for( i = 0; i < 8; i++ )
+    {
+        number[ i ].isExist = FALSE;
+        number[ i ].y = 0;
+        number[ i ].size_x = 7;
+        number[ i ].size_y = 7;
+    }
+    //自分のポイント表示用
+    number[0].x = DISPLAY_MAX_CHAR_X / 4;
+    number[1].x = DISPLAY_MAX_CHAR_X / 4 + 7;
+    number[2].x = DISPLAY_MAX_CHAR_X / 4 + 14;
+    //残り時間表示用
+    number[3].x = DISPLAY_MAX_CHAR_X / 2 - 7;
+    number[4].x = DISPLAY_MAX_CHAR_X / 2;
+    //敵のポイント表示用
+    number[5].x = DISPLAY_MAX_CHAR_X * 3 / 4;
+    number[6].x = DISPLAY_MAX_CHAR_X * 3 / 4 + 7;
+    number[7].x = DISPLAY_MAX_CHAR_X * 3 / 4 + 14;
 
     for( i = 0; i < MAX_TARGET_NUM; i++ )
     {

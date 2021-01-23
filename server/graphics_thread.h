@@ -6,8 +6,8 @@
 #include "../common/debug.h"
 #include "../common/object.h"
 
-#define DISPLAY_MAX_CHAR_X 236
-#define DISPLAY_MAX_CHAR_Y 67
+#define DISPLAY_MAX_CHAR_X 236 //横の解像度÷8
+#define DISPLAY_MAX_CHAR_Y 67 //縦の解像度÷16くらい
 #define DISPLAY_MAX_RESOLUTION_X 1920
 #define DISPLAY_MAX_RESOLUTION_Y 1080
 
@@ -30,22 +30,11 @@
 #define TYPE_SELF_SHIELD 17
 #define TYPE_ENEMY_SHIELD 18
 
-#define CHAR_NUM0 40
-#define CHAR_NUM1 41
-#define CHAR_NUM2 42
-#define CHAR_NUM3 43
-#define CHAR_NUM4 44
-#define CHAR_NUM5 45
-#define CHAR_NUM6 46
-#define CHAR_NUM7 47
-#define CHAR_NUM8 48
-#define CHAR_NUM9 49
+#define CHAR_NUM(n) (20+n)
 
 DWORD WINAPI GraphicsThread( LPVOID arg ); //グラフィック用スレッド
 
 void displayUpdate( int map[ DISPLAY_MAX_CHAR_Y ][ DISPLAY_MAX_CHAR_X ] ); //画面出力関数
 void writeObject( int map[ DISPLAY_MAX_CHAR_Y ][ DISPLAY_MAX_CHAR_X ], CommonObject object );
-void setCursorPos_1( int x, int y );
-void setCursorPos_2( int x, int y );
 
 #endif /* DISPLAY_H_ */

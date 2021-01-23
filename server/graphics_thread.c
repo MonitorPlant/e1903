@@ -4,10 +4,11 @@
 #include "../common/object.h"
 #include "graphics_thread.h"
 
-extern CommonObject map_source;
+extern CommonObject background;
 extern CommonObject self, enemy;
 extern CommonObject target[ MAX_TARGET_NUM ];
 extern CommonObject bullet[ MAX_BULLET_NUM ];
+extern CommonObject number[8];
 extern MouseState self_mouse, enemy_mouse;
 
 extern BOOL end_program;
@@ -19,76 +20,122 @@ extern const int char_loading0[ DISPLAY_MAX_CHAR_Y ][ DISPLAY_MAX_CHAR_X ], char
 extern const int char_target1[5][10], char_target2[5][10], char_target3[3][6], char_target4[2][4];
 extern const int char_bullet_self[2][8], char_bullet_enemy[2][8];
 extern const int char_self[15][30], char_self_shield[15][30], char_enemy[15][30], char_enemy_shield[15][30];
+extern const int char_rules[67][236], char_result_self[67][236], char_result_enemy[67][236], char_title[67][236];
+extern const int char_num[10][7][7];
 
-CONSOLE_SCREEN_BUFFER_INFO csbi;
 HANDLE hCon1, hCon2;
-
-char* msg1 = " ";
-char* msg1_2 = "  ";
-char* msg2 = "\n";
-
-DWORD cbWriten;
-
-int write_end = 0;
-int buffer_1or2 = 1;
 
 DWORD WINAPI GraphicsThread( LPVOID arg )
 {
+    int i, j, k;
+
     SMALL_RECT rc = { 0, 0, DISPLAY_MAX_CHAR_X, DISPLAY_MAX_CHAR_Y };
-    COORD coord;
-    int i, j;
-    
-    coord.X = rc.Right + 1;
-	coord.Y = rc.Bottom + 1;
-	SetConsoleScreenBufferSize(hCon1, coord);
-	SetConsoleScreenBufferSize(hCon2, coord);
-	SetConsoleWindowInfo(hCon1, TRUE, &rc);
-	SetConsoleWindowInfo(hCon2, TRUE, &rc);
-
-    AllocConsole();
-	SetConsoleTitle(TEXT("STAR SHOOT"));
-
-    hCon1 = CreateConsoleScreenBuffer(
+	COORD coord;
+	
+	AllocConsole();
+	SetConsoleTitle( TEXT( "STAR WARS" ) );
+	
+	hCon1 = CreateConsoleScreenBuffer(
 		GENERIC_WRITE,
 		0,
 		NULL,
 		CONSOLE_TEXTMODE_BUFFER,
 		NULL
-	);
-
+    );
+	
 	hCon2 = CreateConsoleScreenBuffer(
 		GENERIC_WRITE,
 		0,
 		NULL,
 		CONSOLE_TEXTMODE_BUFFER,
 		NULL
-	);
+    );
+	
+	coord.X = rc.Right;
+	coord.Y = rc.Bottom;
+	
+	SetConsoleScreenBufferSize(hCon1, coord);
+	SetConsoleScreenBufferSize(hCon2, coord);
+	
+	SetConsoleWindowInfo(hCon1, TRUE, &rc);
+	SetConsoleWindowInfo(hCon2, TRUE, &rc);
 
     while( end_program == FALSE )
     {
         int map[ DISPLAY_MAX_CHAR_Y ][ DISPLAY_MAX_CHAR_X ] = {0};
+
         //背景を設定
-        if( FALSE || map_source.isExist  )
+        if( background.isExist )
         {
-            for( i = 0; i < DISPLAY_MAX_CHAR_Y; i++ )
+            for( i = background.y; i < DISPLAY_MAX_CHAR_Y; i++ )
             {
-                for( j = 0; j < DISPLAY_MAX_CHAR_X; j++ )
+                for( j = background.x; j < DISPLAY_MAX_CHAR_X; j++ )
                 {
-                    switch( map_source.type )
+                    switch( background.type )
                     {
                         case TYPE_LOADING0: map[ i ][ j ] = char_loading0[ i ][ j ]; break;
                         case TYPE_LOADING1: map[ i ][ j ] = char_loading1[ i ][ j ]; break;
                         case TYPE_LOADING2: map[ i ][ j ] = char_loading2[ i ][ j ]; break;
                         case TYPE_LOADING3: map[ i ][ j ] = char_loading3[ i ][ j ]; break;
+                        case TYPE_TITLE: map[ i ][ j ] = char_title[ i ][ j ]; break;
+                        case TYPE_RULES: map[ i ][ j ] = char_rules[ i ][ j ]; break;
+                        case TYPE_SELF_WIN: map[ i ][ j ] = char_result_self[ i ][ j ]; break;
+                        case TYPE_ENEMY_WIN: map[ i ][ j ] = char_result_enemy[ i ][ j ]; break;
                     }
                 }
             }
         }
-        for( i = 0; i < DISPLAY_MAX_CHAR_Y; i++ )
+
+        //数字を合成
+        for( i = 0; i < 8; i++ )
         {
-            for( j = 0; j < DISPLAY_MAX_CHAR_X; j++ )
+            if( number[ i ].isExist )
             {
-                map[ i ][ j ] = char_loading0[ i ][ j ];
+                for( j = 0; j < 7; j++ )
+                {
+                    for( k = 0; k < 7; k++ )
+                    {
+                        map[ number[ i ].y + j ][ number[ i ].x + k ] = char_num[ 9 - ( CHAR_NUM(9) - number[ i ].type ) ][ j ][ k ];
+                    }
+                }
+            }
+        }
+
+        //メインキャラを合成
+        if( self.isExist )
+        {
+            for( i = 0; i < ( signed )self.size_y; i++ )
+            {
+                for( j = 0; j < ( signed )self.size_x; j++ )
+                {
+                    if( self_mouse.click_right )
+                    {
+                        map[ self.y + i ][ self.x + j ] = char_self_shield[ i ][ j ];
+                    }
+                    else
+                    {
+                        map[ self.y + i ][ self.x + j ] = char_self[ i ][ j ];
+                    }
+                }
+            }
+        }
+
+        //敵キャラを合成
+        if( enemy.isExist )
+        {
+            for( i = 0; i < ( signed )enemy.size_y; i++ )
+            {
+                for( j = 0; j < ( signed )enemy.size_x; j++ )
+                {
+                    if( self_mouse.click_right )
+                    {
+                        map[ enemy.y + i ][ enemy.x + j ] = char_enemy_shield[ i ][ j ];
+                    }
+                    else
+                    {
+                        map[ enemy.y + i ][ enemy.x + j ] = char_enemy[ i ][ j ];
+                    }
+                }
             }
         }
 
@@ -114,142 +161,35 @@ void writeObject( int map[ DISPLAY_MAX_CHAR_Y ][ DISPLAY_MAX_CHAR_X ], CommonObj
     ( void )map;
 }
 
-
-void displayUpdate( int map[ DISPLAY_MAX_CHAR_Y ][ DISPLAY_MAX_CHAR_X ] )
+void displayUpdate(int map[DISPLAY_MAX_CHAR_Y][DISPLAY_MAX_CHAR_X] )
 {
-    int i, j, l;
-    int dont_write = 0;
-    int count_same = 0;
-
-    if (buffer_1or2 == 1 & write_end == 0) {
-
-		for (i = 0; i < 67; i++) {
-
-			for (j = 1; j < 235; j++) {
-				if (map[i][j] == map[i][j + 1]) {
-					count_same++;
-				}
-				if (count_same == 234) {
-					setCursorPos_1(j, i + 1);
-					dont_write = 1;
-			    }
-		    }
-            for (j = 0; j < 236; j++) {
-            
-                dont_write = 0;
-                if (j != 0 & map[i][j] != map[i][j - 1]) {
-                    switch (map[i][j]) {
-                        case 0:
-                            if (map[i][j - 1] != 0) {
-                                SetConsoleTextAttribute(hCon1, NULL);
-                            }
-                            else {
-                                setCursorPos_1(j+1, i);
-                                dont_write = 1;
-                            }
-                            break;
-                        case 0x01: SetConsoleTextAttribute(hCon1, BACKGROUND_BLUE); break;
-                        case 0x02: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN); break;
-                        case 0x03: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_BLUE); break;
-                        case 0x04: SetConsoleTextAttribute(hCon1, BACKGROUND_RED); break;
-                        case 0x05: SetConsoleTextAttribute(hCon1, BACKGROUND_BLUE | BACKGROUND_RED); break;
-                        case 0x06: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_RED); break;
-                        case 0x07: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_BLUE); break;
-                        case 0x08: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_INTENSITY); break;
-                        case 0x09: SetConsoleTextAttribute(hCon1, BACKGROUND_BLUE | BACKGROUND_INTENSITY); break;
-                        case 0x0A: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_INTENSITY); break;
-                        case 0x0B: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY); break;
-                        case 0x0C: SetConsoleTextAttribute(hCon1, BACKGROUND_RED | BACKGROUND_INTENSITY); break;
-                        case 0x0D: SetConsoleTextAttribute(hCon1, BACKGROUND_BLUE | BACKGROUND_RED | BACKGROUND_INTENSITY); break;
-                        case 0x0E: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY); break;
-                        case 0x0F: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_INTENSITY);break;
-                    }
-                }
-                if(dont_write != 1)
-                {
-                    WriteConsole(hCon1, msg1, lstrlen(msg1), &cbWriten, NULL);
-                }
-            }
-        setCursorPos_1(0, i + 1);
+	//static int buffer_1or2 = 1;
+	int i, j, k;
+	CHAR_INFO ci[67][236] = {0};
+	COORD buffer_size = { 236, 67 };
+	COORD start_coord = { 0, 0 };
+	SMALL_RECT sr = { 0, 0, 235, 66 };
+	
+	for (i = 0; i < 67; i++) {
+		for (j = 0; j < 236; j++) {
+			ci[i][j].Char.AsciiChar = ' ';
+			ci[i][j].Attributes = 16 * map[i][j];
 		}
+	}
+    WriteConsoleOutput(hCon2, (CHAR_INFO*)ci, buffer_size, start_coord, &sr);
+	SetConsoleActiveScreenBuffer(hCon2);
+    
+    /*
+	if (buffer_1or2) {
+		buffer_1or2 = 0;
+		
+		WriteConsoleOutput(hCon1, (CHAR_INFO*)ci, buffer_size, start_coord, &sr);
 		SetConsoleActiveScreenBuffer(hCon1);
-
-		buffer_1or2 = 2;
-		write_end = 1;
 	}
-
-
-	if (buffer_1or2 == 2 & write_end == 0) {
-
-		for (i = 0; i < 67; i++) {
-
-			for (j = 1; j < 235; j++) {
-				if (map[i][j] == map[i][j + 1]) {
-					count_same++;
-				}
-				if (count_same == 234){
-					setCursorPos_2(j, i+1);
-					dont_write = 1;
-		    	}
-		    }
-        
-            for (j = 0; j < 236; j++) {
-                dont_write = 0;
-
-                if (j != 0 & map[i][j] != map[i][j - 1]) {
-                    switch (map[i][j]) {
-                        case 0:
-                            if (map[i][j - 1] != 0) {
-                                SetConsoleTextAttribute(hCon2, NULL);
-                            }
-                            else
-                            {
-                                setCursorPos_2(j + 1, i);
-                                dont_write = 1;
-                            }
-                            break;
-                        case 0x01: SetConsoleTextAttribute(hCon1, BACKGROUND_BLUE); break;
-                        case 0x02: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN); break;
-                        case 0x03: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_BLUE); break;
-                        case 0x04: SetConsoleTextAttribute(hCon1, BACKGROUND_RED); break;
-                        case 0x05: SetConsoleTextAttribute(hCon1, BACKGROUND_BLUE | BACKGROUND_RED); break;
-                        case 0x06: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_RED); break;
-                        case 0x07: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_BLUE); break;
-                        case 0x08: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_INTENSITY); break;
-                        case 0x09: SetConsoleTextAttribute(hCon1, BACKGROUND_BLUE | BACKGROUND_INTENSITY); break;
-                        case 0x0A: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_INTENSITY); break;
-                        case 0x0B: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY); break;
-                        case 0x0C: SetConsoleTextAttribute(hCon1, BACKGROUND_RED | BACKGROUND_INTENSITY); break;
-                        case 0x0D: SetConsoleTextAttribute(hCon1, BACKGROUND_BLUE | BACKGROUND_RED | BACKGROUND_INTENSITY); break;
-                        case 0x0E: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY); break;
-                        case 0x0F: SetConsoleTextAttribute(hCon1, BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_INTENSITY);break;
-                    }
-                }
-                if (dont_write != 1)
-                    WriteConsole(hCon2, msg1, lstrlen(msg1), &cbWriten, NULL);
-            }
-            setCursorPos_2(0, i + 1);
-		}
-		SetConsoleActiveScreenBuffer(hCon2);
-
+	else{
 		buffer_1or2 = 1;
-		write_end = 1;
-	}
-    ( void )dont_write;
-}
-
-void setCursorPos_1(int x, int y)
-{
-	COORD pos;
-	pos.X = x;
-	pos.Y = y;
-	SetConsoleCursorPosition(hCon1, pos);
-}
-
-void setCursorPos_2(int x, int y)
-{
-	COORD pos;
-	pos.X = x;
-	pos.Y = y;
-	SetConsoleCursorPosition(hCon2, pos);
+		
+		WriteConsoleOutput(hCon2, (CHAR_INFO*)ci, buffer_size, start_coord, &sr);
+		SetConsoleActiveScreenBuffer(hCon2);
+	}*/
 }

@@ -6,10 +6,11 @@
 #include "graphics_thread.h"
 #include "main_loop_thread.h"
 
-extern CommonObject map_source;
+extern CommonObject background;
 extern CommonObject self, enemy;
 extern CommonObject target[ MAX_TARGET_NUM ];
 extern CommonObject bullet[ MAX_BULLET_NUM ];
+extern CommonObject number[8];
 extern MouseState self_mouse, enemy_mouse;
 
 extern BOOL end_program;
@@ -17,38 +18,40 @@ extern BOOL game_end;
 extern char point_self, point_enemy;
 extern char remain_time;
 
+extern const int char_target1[5][10], char_target2[5][10], char_target3[3][6], char_target4[2][4], char_num[10][7][7];
+
 DWORD WINAPI MainLoopThread( LPVOID arg )
 {
     int i;
     HTIMER screen_timer;
 
     //対戦相手が見つかるまで待機
-    map_source.x = map_source.y = 0;
-    map_source.isExist = TRUE;
+    background.x = background.y = 0;
+    background.isExist = TRUE;
     SET_TIMER( screen_timer );
     while( enemy.isExist == FALSE )
     {
         //400msごとにロード画面を切り替え
         switch( PASSED_TIME( screen_timer ) / 400 % 4 )
         {
-            case 0: map_source.type = TYPE_LOADING0; break;
-            case 1: map_source.type = TYPE_LOADING1; break;
-            case 2: map_source.type = TYPE_LOADING2; break;
-            case 3: map_source.type = TYPE_LOADING3; break;
+            case 0: background.type = TYPE_LOADING0; break;
+            case 1: background.type = TYPE_LOADING1; break;
+            case 2: background.type = TYPE_LOADING2; break;
+            case 3: background.type = TYPE_LOADING3; break;
         }
         Sleep( 10 );
     }
 
     
     //プレイヤーがマウスをクリックするまで待機 スペースを押すとルール説明
-    map_source.type = TYPE_TITLE;
+    background.type = TYPE_TITLE;
     while( self_mouse.click_left == FALSE )
     {
         updateMouseState();
         if( GetAsyncKeyState( VK_SPACE ) & 0x8000 )
         {
             //ルール説明画面を表示
-            map_source.type = TYPE_RULES;
+            background.type = TYPE_RULES;
             Sleep( 100 );
             while( GetAsyncKeyState( VK_SPACE ) & 0x8000 )
             {
@@ -60,7 +63,7 @@ DWORD WINAPI MainLoopThread( LPVOID arg )
                 Sleep( 1 );
             }
             //タイトル画面に戻す
-            map_source.type = TYPE_TITLE;
+            background.type = TYPE_TITLE;
             Sleep( 100 );
             while( GetAsyncKeyState( VK_ESCAPE ) & 0x8000 )
             {
@@ -70,43 +73,42 @@ DWORD WINAPI MainLoopThread( LPVOID arg )
         }
         Sleep( 1 );
     }
+    //背景を無効化
+    background.isExist = FALSE;
 
 
     //カウントダウン
-    map_source.x = DISPLAY_MAX_CHAR_X / 2;
-    map_source.y = DISPLAY_MAX_CHAR_Y / 2;
-    map_source.type = CHAR_NUM3; //3秒前
+    number[4].isExist = TRUE;
+    number[4].type = CHAR_NUM(3); //3秒前
     SET_TIMER( screen_timer );
     while( PASSED_TIME( screen_timer ) < 1000 )
     {
         Sleep( 10 );
     }
-    map_source.type = CHAR_NUM2; //2秒前
+    number[4].type = CHAR_NUM(2); //2秒前
     while( PASSED_TIME( screen_timer ) < 2000 )
     {
         Sleep( 10 );
     }
-    map_source.type = CHAR_NUM1; //1秒前
+    number[4].type = CHAR_NUM(1); //1秒前
     while( PASSED_TIME( screen_timer ) < 3000 )
     {
         Sleep( 10 );
     }
-    map_source.x = map_source.y = 0;
-
 
     //ゲームスタート
     mainLoop();
 
 
     //結果画面
-    map_source.isExist = TRUE;
+    background.isExist = TRUE;
     if( point_self > point_enemy )
     {
-        /* map_source.type = 自分が勝った画面 */
+        /* background.type = 自分が勝った画面 */
     }
     else
     {
-        /* map_source.type = 敵が勝った画面 */
+        /* background.type = 敵が勝った画面 */
     }
 
 
@@ -125,10 +127,13 @@ void mainLoop( void )
     HTIMER generate_bullet_timer;
 
     //初期化
+    for( i = 0; i < 8; i++ )
+    {
+        number[ i ].isExist = TRUE;
+    }
     srand( ( unsigned )time( NULL ) );
-    map_source.isExist = FALSE;
     self.isExist = TRUE;
-    enemy.isExist = FALSE;
+    enemy.isExist = TRUE;
     point_enemy = point_self = 0;
     SET_TIMER( main_timer );
     SET_TIMER( target_timer );
@@ -141,18 +146,36 @@ void mainLoop( void )
     {
         //残り時間設定
         remain_time = 60 - PASSED_TIME( main_timer ) / 1000;
+        number[3].type = CHAR_NUM( remain_time / 10 );
+        number[4].type = CHAR_NUM( remain_time % 10 );
+
+        //得点を設定
+        number[0].type = CHAR_NUM( point_self / 100 );
+        number[1].type = CHAR_NUM( point_self % 100 / 10 );
+        number[2].type = CHAR_NUM( point_self % 10 );
+        number[5].type = CHAR_NUM( point_enemy / 100 );
+        number[6].type = CHAR_NUM( point_enemy % 100 / 10 );
+        number[7].type = CHAR_NUM( point_enemy / 100 );
 
         //キャラクターの座標を更新
         updateMouseState();
 
-        //クリックで弾を生成
+        //弾を生成
         if( PASSED_TIME( generate_bullet_timer ) > 60 )
         {
             SET_TIMER( generate_bullet_timer );
             //自分の弾を生成
             if( self_mouse.click_left && self_mouse.click_left_pass == FALSE )
             {
-                
+                for( i = 0; i < MAX_BULLET_NUM; i++ )
+                {
+                    if( bullet[ i ].isExist == FALSE )
+                    {
+                        bullet[ i ].isExist = TRUE;
+                        bullet[ i ].x = self.x + self.size_x;
+                        bullet[ i ].y = self.y + self.size_y / 2;
+                    }
+                }
             }
             self_mouse.click_left_pass = self_mouse.click_left;
         }
@@ -193,7 +216,31 @@ void mainLoop( void )
                 {
                     target[ i ].isExist = TRUE;
                     target[ i ].y = 0;
-                    target[ i ].x = rand() / DISPLAY_MAX_CHAR_X;
+                    target[ i ].x = rand() % ( DISPLAY_MAX_CHAR_X / 2 ) + DISPLAY_MAX_CHAR_X / 4;
+                    //的の種類をランダムに生成
+                    switch( rand() % 4 )
+                    {
+                        case 0:
+                            target[ i ].type = TYPE_TARGET1;
+                            target[ i ].size_x = sizeof( char_target1[0] );
+                            target[ i ].size_y = sizeof( char_target1 );
+                            break;
+                        case 1:
+                            target[ i ].type = TYPE_TARGET2;
+                            target[ i ].size_x = sizeof( char_target2[0] );
+                            target[ i ].size_y = sizeof( char_target2 );
+                            break;
+                        case 2:
+                            target[ i ].type = TYPE_TARGET3;
+                            target[ i ].size_x = sizeof( char_target3[0] );
+                            target[ i ].size_y = sizeof( char_target3 );
+                            break;
+                        case 3:
+                            target[ i ].type = TYPE_TARGET4;
+                            target[ i ].size_x = sizeof( char_target4[0] );
+                            target[ i ].size_y = sizeof( char_target4 );
+                            break;
+                    }
                     break;
                 }
             }
@@ -268,6 +315,7 @@ void mainLoop( void )
                             {
                                 point_enemy += 1;
                             }
+                            //着弾すれば的を削除
                             target[ i ].isExist = FALSE;
                         }
                     }
@@ -314,8 +362,8 @@ void updateMouseState( void )
     }
 
     //座標をコピー、各ボタンの状態を更新
-    self.x = pt.x / 8;
-    self.y = pt.y / 18;
+    self.x = pt.x / 8 - 15;
+    self.y = pt.y / 18 - 7;
     self_mouse.click_left = ( GetKeyState( VK_LBUTTON ) >> 15 ) & 1;
     self_mouse.click_right = ( GetKeyState( VK_RBUTTON ) >> 15 ) & 1;
     self_mouse.click_wheel = ( GetKeyState( VK_MBUTTON ) >> 15 ) & 1;

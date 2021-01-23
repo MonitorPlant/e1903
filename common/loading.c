@@ -6,6 +6,10 @@
 #define C 0x0C
 #endif /* C */
 
+#ifndef F
+#define F 0x0F
+#endif /* F */
+
 #define SCREEN_MAX_Y 67
 #define SCREEN_MAX_X 236
 
@@ -295,5 +299,7 @@ const int char_loading3[ SCREEN_MAX_Y ][ SCREEN_MAX_X ] =
 
 #undef B
 #undef C
+#undef F
 #undef SCREEN_MAX_X
 #undef SCREEN_MAX_Y
+

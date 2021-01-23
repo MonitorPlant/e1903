@@ -24,6 +24,8 @@ typedef struct _MOUSE_STATE_
     BOOL click_left;
     BOOL click_right;
     BOOL click_wheel;
+    BOOL click_left_pass;
+    BOOL click_wheel_pass;
 } MouseState;
 
 #endif /* OBJECT_H_ */

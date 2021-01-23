@@ -15,7 +15,7 @@ MouseState self_mouse, enemy_mouse;
 
 BOOL end_program = FALSE; //プログラム終了もしくは強制終了
 BOOL game_end = FALSE; //ゲーム正常終了
-char point_self = 0, point_enemy = 0;
+short point_self = 0, point_enemy = 0;
 char remain_time = 0;
 
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
@@ -30,7 +30,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     self.isExist = enemy.isExist = FALSE;
     self.y = enemy.y = DISPLAY_MAX_CHAR_Y / 2;
     self.x = DISPLAY_MAX_CHAR_X / 4;
-    enemy.x = DISPLAY_MAX_CHAR_X * 3 / 2;
+    enemy.x = 200;
     self.size_x = enemy.size_x = 30;
     self.size_y = enemy.size_y = 15;
     self_mouse.click_left = self_mouse.click_right = self_mouse.click_wheel = FALSE;
@@ -60,6 +60,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     for( i = 0; i < MAX_TARGET_NUM; i++ )
     {
         target[ i ].isExist = FALSE;
+        target[ i ].type = 0;
+        target[ i ].size_x = 0;
+        target[ i ].size_y = 0;
     }
     for( i = 0; i < MAX_BULLET_NUM; i++ )
     {

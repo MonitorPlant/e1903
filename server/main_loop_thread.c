@@ -16,7 +16,7 @@ extern MouseState self_mouse, enemy_mouse;
 
 extern BOOL end_program;
 extern BOOL game_end;
-extern char point_self, point_enemy;
+extern short point_self, point_enemy;
 extern char remain_time;
 
 extern const int char_target1[5][10], char_target2[5][10], char_target3[3][6], char_target4[2][4], char_num[10][7][7];
@@ -101,6 +101,7 @@ DWORD WINAPI MainLoopThread( LPVOID arg )
     mainLoop();
 
 
+    //結果画面
     self.isExist = FALSE;
     enemy.isExist = FALSE;
     for( i = 0; i < MAX_BULLET_NUM; i++ )
@@ -111,7 +112,14 @@ DWORD WINAPI MainLoopThread( LPVOID arg )
     {
         target[ i ].isExist = FALSE;
     }
-    //結果画面
+    for( i = 0; i < 3; i++ )
+    {
+        number[ i ].x = number[ i + 5 ].x;
+        number[ i ].y = 22;
+        number[ i + 5].y = 10;
+    }
+    number[3].isExist = FALSE;
+    number[4].isExist = FALSE;
     background.isExist = TRUE;
     if( point_self > point_enemy )
     {
@@ -175,7 +183,7 @@ void mainLoop( void )
         updateMouseState();
 
         //自分の弾を生成
-        if( self_mouse.click_left && self_mouse.click_left_pass == FALSE )
+        if( self_mouse.click_left && self_mouse.click_left_pass == FALSE && self_mouse.click_right == FALSE )
         {
             for( i = 0; i < MAX_BULLET_NUM; i++ )
             {
@@ -190,8 +198,8 @@ void mainLoop( void )
             }
         }
 
-        //50msごとに弾を移動
-        if( PASSED_TIME( bullet_timer ) > 50 )
+        //10msごとに弾を移動
+        if( PASSED_TIME( bullet_timer ) > 10 )
         {
             SET_TIMER( bullet_timer );
             for( i = 0; i < MAX_BULLET_NUM; i++ )
@@ -228,7 +236,7 @@ void mainLoop( void )
                     target[ i ].y = 0;
                     target[ i ].x = rand() % ( DISPLAY_MAX_CHAR_X / 2 ) + DISPLAY_MAX_CHAR_X / 4;
                     //的の種類をランダムに生成
-                    /*switch( rand() & 0x03 )
+                    switch( rand() & 0x03 )
                     {
                         case 0x00:
                             target[ i ].type = TYPE_TARGET1;
@@ -250,10 +258,7 @@ void mainLoop( void )
                             target[ i ].size_x = 4;
                             target[ i ].size_y = 2;
                             break;
-                    }*/
-                    target[ i ].type = TYPE_TARGET1;
-                    target[ i ].size_x = 10;
-                    target[ i ].size_y = 5;
+                    }
                     break;
                 }
             }
@@ -269,7 +274,7 @@ void mainLoop( void )
                 {
                     target[ i ].y += 2;
                     //範囲外に出れば削除
-                    if( target[ i ].y > DISPLAY_MAX_CHAR_Y )
+                    if( target[ i ].y > DISPLAY_MAX_CHAR_Y - target[ i ].size_y )
                     {
                         target[ i ].isExist = FALSE;
                     }
@@ -288,6 +293,10 @@ void mainLoop( void )
                     {
                         bullet[ i ].isExist = FALSE;
                         point_enemy += 10;
+                        if( point_enemy > 999 )
+                        {
+                            point_enemy = 999;
+                        }
                     }
                 }
             }
@@ -300,10 +309,14 @@ void mainLoop( void )
             {
                 if( bullet[ i ].isExist == TRUE && bullet[ i ].type == TYPE_BULLET_SELF )
                 {
-                    if( bullet[ i ].x + bullet[ i ].size_x > self.x && bullet[ i ].x < self.x + self.size_x && bullet[ i ].y + bullet[ i ].size_y > self.y && bullet[ i ].y < self.y + self.size_y )
+                    if( bullet[ i ].x + bullet[ i ].size_x > enemy.x && bullet[ i ].x < enemy.x + enemy.size_x && bullet[ i ].y + bullet[ i ].size_y > enemy.y && bullet[ i ].y < enemy.y + enemy.size_y )
                     {
                         bullet[ i ].isExist = FALSE;
                         point_self += 10;
+                        if( point_self > 999 )
+                        {
+                            point_self = 999;
+                        }
                     }
                 }
             }
@@ -323,10 +336,18 @@ void mainLoop( void )
                             if( bullet[ j ].type == TYPE_BULLET_SELF )
                             {
                                 point_self += 1;
+                                if( point_self > 999 )
+                                {
+                                    point_self = 999;
+                                }
                             }
                             else
                             {
                                 point_enemy += 1;
+                                if( point_enemy > 999 )
+                                {
+                                    point_enemy = 999;
+                                }
                             }
                             //着弾すれば的を削除
                             target[ i ].isExist = FALSE;
@@ -375,8 +396,8 @@ void updateMouseState( void )
     }
 
     //座標をコピー、各ボタンの状態を更新
-    self.x = pt.x / 8 - 15;
-    self.y = pt.y / 18 - 7;
+    self.x = pt.x / 8 - 14;
+    self.y = pt.y / 18 - 3;
     if( self.x < 0 )
     {
         self.x = 0;

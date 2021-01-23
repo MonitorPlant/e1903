@@ -13,7 +13,7 @@ extern MouseState self_mouse, enemy_mouse;
 
 extern BOOL end_program;
 extern BOOL game_end;
-extern char point_self, point_enemy;
+extern short point_self, point_enemy;
 extern char remain_time;
 
 extern const int char_loading0[ DISPLAY_MAX_CHAR_Y ][ DISPLAY_MAX_CHAR_X ], char_loading1[ DISPLAY_MAX_CHAR_Y ][ DISPLAY_MAX_CHAR_X ], char_loading2[ DISPLAY_MAX_CHAR_Y ][ DISPLAY_MAX_CHAR_X ], char_loading3[ DISPLAY_MAX_CHAR_Y ][ DISPLAY_MAX_CHAR_X ];
@@ -130,13 +130,13 @@ DWORD WINAPI GraphicsThread( LPVOID arg )
         }
 
         //敵キャラを合成
-        if( enemy.isExist )
+        if( enemy.isExist && remain_time != 0 )
         {
             for( i = 0; i < ( signed )enemy.size_y; i++ )
             {
                 for( j = 0; j < ( signed )enemy.size_x; j++ )
                 {
-                    if( self_mouse.click_right )
+                    if( enemy_mouse.click_right )
                     {
                         map[ enemy.y + i ][ enemy.x + j ] = char_enemy_shield[ i ][ j ];
                     }
@@ -149,7 +149,7 @@ DWORD WINAPI GraphicsThread( LPVOID arg )
         }
 
         //メインキャラを合成
-        if( self.isExist )
+        if( self.isExist && remain_time != 0 )
         {
             for( i = 0; i < ( signed )self.size_y; i++ )
             {

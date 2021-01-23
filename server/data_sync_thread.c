@@ -14,7 +14,7 @@ extern MouseState self_mouse, enemy_mouse;
 
 extern BOOL end_program;
 extern BOOL game_end;
-extern char point_self, point_enemy;
+extern short point_self, point_enemy;
 extern char remain_time;
 
 DWORD WINAPI DataSyncThread( LPVOID arg )

@@ -35,6 +35,5 @@
 DWORD WINAPI GraphicsThread( LPVOID arg ); //グラフィック用スレッド
 
 void displayUpdate( int map[ DISPLAY_MAX_CHAR_Y ][ DISPLAY_MAX_CHAR_X ] ); //画面出力関数
-void writeObject( int map[ DISPLAY_MAX_CHAR_Y ][ DISPLAY_MAX_CHAR_X ], CommonObject object );
 
 #endif /* DISPLAY_H_ */

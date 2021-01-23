@@ -27,9 +27,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
     //各変数の初期化
     background.isExist = TRUE;
-    background.isChanging = FALSE;
     self.isExist = enemy.isExist = FALSE;
-    self.isChanging = enemy.isChanging = FALSE;
     self.y = enemy.y = DISPLAY_MAX_CHAR_Y / 2;
     self.x = DISPLAY_MAX_CHAR_X / 4;
     enemy.x = DISPLAY_MAX_CHAR_X * 3 / 2;
@@ -62,12 +60,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     for( i = 0; i < MAX_TARGET_NUM; i++ )
     {
         target[ i ].isExist = FALSE;
-        target[ i ].isChanging = FALSE;
     }
     for( i = 0; i < MAX_BULLET_NUM; i++ )
     {
         bullet[ i ].isExist = FALSE;
-        bullet[ i ].isChanging = FALSE;
+        bullet[ i ].size_x = 8;
+        bullet[ i ].size_y = 2;
     }
 
     //グラフィックススレッド起動

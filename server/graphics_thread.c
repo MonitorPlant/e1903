@@ -86,35 +86,44 @@ DWORD WINAPI GraphicsThread( LPVOID arg )
             }
         }
 
-        //数字を合成
-        for( i = 0; i < 8; i++ )
+        //弾丸を合成
+        for( i = 0; i < MAX_BULLET_NUM; i++ )
         {
-            if( number[ i ].isExist )
+            if( bullet[ i ].isExist )
             {
-                for( j = 0; j < 7; j++ )
+                for( j = 0; j < ( signed )bullet[ i ].size_y; j++ )
                 {
-                    for( k = 0; k < 7; k++ )
+                    for( k = 0; k < ( signed )bullet[ i ].size_x; k++ )
                     {
-                        map[ number[ i ].y + j ][ number[ i ].x + k ] = char_num[ 9 - ( CHAR_NUM(9) - number[ i ].type ) ][ j ][ k ];
+                        if( bullet[ i ].type == TYPE_BULLET_SELF )
+                        {
+                            map[ bullet[ i ].y + j ][ bullet[ i ].x + k ] = char_bullet_self[ j ][ k ];
+                        }
+                        else
+                        {
+                            map[ bullet[ i ].y + j ][ bullet[ i ].x + k ] = char_bullet_enemy[ j ][ k ];
+                        }
                     }
                 }
             }
         }
 
-        //メインキャラを合成
-        if( self.isExist )
+        //的を合成
+        for( i = 0; i < MAX_TARGET_NUM; i++ )
         {
-            for( i = 0; i < ( signed )self.size_y; i++ )
+            if( target[ i ].isExist )
             {
-                for( j = 0; j < ( signed )self.size_x; j++ )
+                for( j = 0; j < ( signed )target[ i ].size_y; j++ )
                 {
-                    if( self_mouse.click_right )
+                    for( k = 0; k < ( signed )target[ i ].size_x; k++ )
                     {
-                        map[ self.y + i ][ self.x + j ] = char_self_shield[ i ][ j ];
-                    }
-                    else
-                    {
-                        map[ self.y + i ][ self.x + j ] = char_self[ i ][ j ];
+                        switch( target[ i ].type )
+                        {
+                            case TYPE_TARGET1: map[ target[ i ].y + j ][ target[ i ].x + k ] = char_target1[ j ][ k ]; break;
+                            case TYPE_TARGET2: map[ target[ i ].y + j ][ target[ i ].x + k ] = char_target2[ j ][ k ]; break;
+                            case TYPE_TARGET3: map[ target[ i ].y + j ][ target[ i ].x + k ] = char_target3[ j ][ k ]; break;
+                            case TYPE_TARGET4: map[ target[ i ].y + j ][ target[ i ].x + k ] = char_target4[ j ][ k ]; break;
+                        }
                     }
                 }
             }
@@ -139,26 +148,46 @@ DWORD WINAPI GraphicsThread( LPVOID arg )
             }
         }
 
+        //メインキャラを合成
+        if( self.isExist )
+        {
+            for( i = 0; i < ( signed )self.size_y; i++ )
+            {
+                for( j = 0; j < ( signed )self.size_x; j++ )
+                {
+                    if( self_mouse.click_right )
+                    {
+                        map[ self.y + i ][ self.x + j ] = char_self_shield[ i ][ j ];
+                    }
+                    else
+                    {
+                        map[ self.y + i ][ self.x + j ] = char_self[ i ][ j ];
+                    }
+                }
+            }
+        }
+
+        //数字を合成
+        for( i = 0; i < 8; i++ )
+        {
+            if( number[ i ].isExist )
+            {
+                for( j = 0; j < 7; j++ )
+                {
+                    for( k = 0; k < 7; k++ )
+                    {
+                        map[ number[ i ].y + j ][ number[ i ].x + k ] = char_num[ 9 - ( CHAR_NUM(9) - number[ i ].type ) ][ j ][ k ];
+                    }
+                }
+            }
+        }
+
         //画面を出力
         displayUpdate( map );
     }
 
     ( void )arg;
     return 0;
-}
-
-//引数として渡されたオブジェクトをint型の配列に数字として書き込む関数
-void writeObject( int map[ DISPLAY_MAX_CHAR_Y ][ DISPLAY_MAX_CHAR_X ], CommonObject object )
-{
-    unsigned int i, j;
-    for( i = 0; i < object.size_y; i++ )
-    {
-        for( j = 0; j < object.size_x; j++ )
-        {
-            //map[ i + object.y ][ j + object.x ] = object.design[ i ][ j ];
-        }
-    }
-    ( void )map;
 }
 
 void displayUpdate(int map[DISPLAY_MAX_CHAR_Y][DISPLAY_MAX_CHAR_X] )
@@ -176,8 +205,8 @@ void displayUpdate(int map[DISPLAY_MAX_CHAR_Y][DISPLAY_MAX_CHAR_X] )
 			ci[i][j].Attributes = 16 * map[i][j];
 		}
 	}
-    WriteConsoleOutput(hCon2, (CHAR_INFO*)ci, buffer_size, start_coord, &sr);
-	SetConsoleActiveScreenBuffer(hCon2);
+    WriteConsoleOutput(hCon1, (CHAR_INFO*)ci, buffer_size, start_coord, &sr);
+	SetConsoleActiveScreenBuffer(hCon1);
     
     /*
 	if (buffer_1or2) {

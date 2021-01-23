@@ -3,6 +3,7 @@
 #include <time.h>
 
 #include "../common/debug.h"
+#include "../common/object.h"
 #include "graphics_thread.h"
 #include "main_loop_thread.h"
 
@@ -124,7 +125,6 @@ void mainLoop( void )
     HTIMER target_timer;
     HTIMER bullet_timer;
     HTIMER generate_target_timer;
-    HTIMER generate_bullet_timer;
 
     //初期化
     for( i = 0; i < 8; i++ )
@@ -139,7 +139,6 @@ void mainLoop( void )
     SET_TIMER( target_timer );
     SET_TIMER( bullet_timer );
     SET_TIMER( generate_target_timer );
-    SET_TIMER( generate_bullet_timer );
 
     //60秒間ループ
     while( PASSED_TIME( main_timer ) < 60000 )
@@ -160,28 +159,24 @@ void mainLoop( void )
         //キャラクターの座標を更新
         updateMouseState();
 
-        //弾を生成
-        if( PASSED_TIME( generate_bullet_timer ) > 60 )
+        //自分の弾を生成
+        if( self_mouse.click_left && self_mouse.click_left_pass == FALSE )
         {
-            SET_TIMER( generate_bullet_timer );
-            //自分の弾を生成
-            if( self_mouse.click_left && self_mouse.click_left_pass == FALSE )
+            for( i = 0; i < MAX_BULLET_NUM; i++ )
             {
-                for( i = 0; i < MAX_BULLET_NUM; i++ )
+                if( bullet[ i ].isExist == FALSE )
                 {
-                    if( bullet[ i ].isExist == FALSE )
-                    {
-                        bullet[ i ].isExist = TRUE;
-                        bullet[ i ].x = self.x + self.size_x;
-                        bullet[ i ].y = self.y + self.size_y / 2;
-                    }
+                    bullet[ i ].isExist = TRUE;
+                    bullet[ i ].type = TYPE_BULLET_SELF;
+                    bullet[ i ].x = self.x + self.size_x;
+                    bullet[ i ].y = self.y + self.size_y / 2;
+                    break;
                 }
             }
-            self_mouse.click_left_pass = self_mouse.click_left;
         }
 
-        //10msごとに弾を移動
-        if( PASSED_TIME( bullet_timer ) > 10 )
+        //50msごとに弾を移動
+        if( PASSED_TIME( bullet_timer ) > 50 )
         {
             SET_TIMER( bullet_timer );
             for( i = 0; i < MAX_BULLET_NUM; i++ )
@@ -189,16 +184,16 @@ void mainLoop( void )
                 //自分の弾なら右に移動 敵の弾なら左に移動
                 if( bullet[ i ].isExist )
                 {
-                    if( bullet[ i ].type == SELF_BULLET )
+                    if( bullet[ i ].type == TYPE_BULLET_SELF )
                     {
-                        bullet[ i ].x++;
+                        bullet[ i ].x += 10;
                     }
                     else
                     {
-                        bullet[ i ].x--;
+                        bullet[ i ].x -= 10;
                     }
                     //範囲外に出れば削除
-                    if( bullet[ i ].x < 0 || DISPLAY_MAX_CHAR_X < bullet[ i ].x )
+                    if( bullet[ i ].x < 0 || DISPLAY_MAX_CHAR_X - bullet[ i ].size_x < bullet[ i ].x )
                     {
                         bullet[ i ].isExist = FALSE;
                     }
@@ -206,8 +201,8 @@ void mainLoop( void )
             }
         }
 
-        //1000msごとに的を追加
-        if( PASSED_TIME( generate_target_timer ) > 1000 )
+        //500msごとに的を追加
+        if( PASSED_TIME( generate_target_timer ) > 500 )
         {
             SET_TIMER( generate_target_timer );
             for( i = 0; i < MAX_TARGET_NUM; i++ )
@@ -218,27 +213,27 @@ void mainLoop( void )
                     target[ i ].y = 0;
                     target[ i ].x = rand() % ( DISPLAY_MAX_CHAR_X / 2 ) + DISPLAY_MAX_CHAR_X / 4;
                     //的の種類をランダムに生成
-                    switch( rand() % 4 )
+                    switch( rand() & 0x03 )
                     {
-                        case 0:
+                        case 0x00:
                             target[ i ].type = TYPE_TARGET1;
-                            target[ i ].size_x = sizeof( char_target1[0] );
-                            target[ i ].size_y = sizeof( char_target1 );
+                            target[ i ].size_x = 10;
+                            target[ i ].size_y = 5;
                             break;
-                        case 1:
+                        case 0x01:
                             target[ i ].type = TYPE_TARGET2;
-                            target[ i ].size_x = sizeof( char_target2[0] );
-                            target[ i ].size_y = sizeof( char_target2 );
+                            target[ i ].size_x = 10;
+                            target[ i ].size_y = 5;
                             break;
-                        case 2:
+                        case 0x02:
                             target[ i ].type = TYPE_TARGET3;
-                            target[ i ].size_x = sizeof( char_target3[0] );
-                            target[ i ].size_y = sizeof( char_target3 );
+                            target[ i ].size_x = 6;
+                            target[ i ].size_y = 3;
                             break;
-                        case 3:
+                        case 0x03:
                             target[ i ].type = TYPE_TARGET4;
-                            target[ i ].size_x = sizeof( char_target4[0] );
-                            target[ i ].size_y = sizeof( char_target4 );
+                            target[ i ].size_x = 4;
+                            target[ i ].size_y = 2;
                             break;
                     }
                     break;
@@ -246,15 +241,15 @@ void mainLoop( void )
             }
         }
 
-        //60msごとに的を移動
-        if( PASSED_TIME( target_timer ) > 60 )
+        //100msごとに的を移動
+        if( PASSED_TIME( target_timer ) > 100 )
         {
             SET_TIMER( target_timer );
             for( i = 0; i < MAX_TARGET_NUM; i++ )
             {
                 if( target[ i ].isExist )
                 {
-                    target[ i ].y++;
+                    target[ i ].y += 2;
                     //範囲外に出れば削除
                     if( target[ i ].y > DISPLAY_MAX_CHAR_Y )
                     {
@@ -269,7 +264,7 @@ void mainLoop( void )
         {
             for( i = 0; i < MAX_BULLET_NUM; i++ )
             {
-                if( bullet[ i ].isExist == TRUE && bullet[ i ].type == ENEMY_BULLET )
+                if( bullet[ i ].isExist == TRUE && bullet[ i ].type == TYPE_BULLET_ENEMY )
                 {
                     if( bullet[ i ].x + bullet[ i ].size_x > self.x && bullet[ i ].x < self.x + self.size_x && bullet[ i ].y + bullet[ i ].size_y > self.y && bullet[ i ].y < self.y + self.size_y )
                     {
@@ -285,7 +280,7 @@ void mainLoop( void )
         {
             for( i = 0; i < MAX_BULLET_NUM; i++ )
             {
-                if( bullet[ i ].isExist == TRUE && bullet[ i ].type == SELF_BULLET )
+                if( bullet[ i ].isExist == TRUE && bullet[ i ].type == TYPE_BULLET_SELF )
                 {
                     if( bullet[ i ].x + bullet[ i ].size_x > self.x && bullet[ i ].x < self.x + self.size_x && bullet[ i ].y + bullet[ i ].size_y > self.y && bullet[ i ].y < self.y + self.size_y )
                     {
@@ -307,7 +302,7 @@ void mainLoop( void )
                     {
                         if( bullet[ j ].x + bullet[ j ].size_x > target[ i ].x && bullet[ j ].x < target[ i ].x + target[ i ].size_x && bullet[ j ].y + bullet[ j ].size_y > target[ i ].y && bullet[ j ].y < target[ i ].y + target[ i ].size_y )
                         {
-                            if( bullet[ j ].type == SELF_BULLET )
+                            if( bullet[ j ].type == TYPE_BULLET_SELF )
                             {
                                 point_self += 1;
                             }
@@ -364,6 +359,16 @@ void updateMouseState( void )
     //座標をコピー、各ボタンの状態を更新
     self.x = pt.x / 8 - 15;
     self.y = pt.y / 18 - 7;
+    if( self.x < 0 )
+    {
+        self.x = 0;
+    }
+    if( self.y > DISPLAY_MAX_CHAR_Y - self.size_y )
+    {
+        self.y = DISPLAY_MAX_CHAR_Y - self.size_y;
+    }
+    self_mouse.click_left_pass = self_mouse.click_left;
+    self_mouse.click_wheel_pass = self_mouse.click_wheel;
     self_mouse.click_left = ( GetKeyState( VK_LBUTTON ) >> 15 ) & 1;
     self_mouse.click_right = ( GetKeyState( VK_RBUTTON ) >> 15 ) & 1;
     self_mouse.click_wheel = ( GetKeyState( VK_MBUTTON ) >> 15 ) & 1;

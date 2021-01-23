@@ -33,7 +33,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     self.y = DISPLAY_MAX_CHAR_X / 4;
     enemy.y = DISPLAY_MAX_CHAR_X / 2;
     self_mouse.click_left = self_mouse.click_right = self_mouse.click_wheel = FALSE;
+    self_mouse.click_left_pass = self_mouse.click_wheel_pass = FALSE;
     enemy_mouse.click_left = enemy_mouse.click_right = enemy_mouse.click_wheel = FALSE;
+    enemy_mouse.click_left_pass = enemy_mouse.click_wheel_pass = FALSE;
 
     for( i = 0; i < MAX_TARGET_NUM; i++ )
     {

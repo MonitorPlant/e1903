@@ -17,11 +17,6 @@ extern BOOL game_end;
 extern char point_self, point_enemy;
 extern char remain_time;
 
-static HTIMER main_timer;
-static HTIMER target_timer;
-static HTIMER bullet_timer;
-static HTIMER generate_target_timer;
-
 DWORD WINAPI MainLoopThread( LPVOID arg )
 {
     int i;
@@ -123,40 +118,45 @@ DWORD WINAPI MainLoopThread( LPVOID arg )
 void mainLoop( void )
 {
     int i, j;
+    HTIMER main_timer;
+    HTIMER target_timer;
+    HTIMER bullet_timer;
+    HTIMER generate_target_timer;
+    HTIMER generate_bullet_timer;
+
+    //初期化
     srand( ( unsigned )time( NULL ) );
-    //変数の再初期化
     map_source.isExist = FALSE;
     self.isExist = TRUE;
     enemy.isExist = FALSE;
+    point_enemy = point_self = 0;
     SET_TIMER( main_timer );
     SET_TIMER( target_timer );
     SET_TIMER( bullet_timer );
     SET_TIMER( generate_target_timer );
+    SET_TIMER( generate_bullet_timer );
+
+    //60秒間ループ
     while( PASSED_TIME( main_timer ) < 60000 )
     {
         //残り時間設定
-        remain_time = PASSED_TIME( main_timer ) / 1000;
+        remain_time = 60 - PASSED_TIME( main_timer ) / 1000;
 
-        //キャラクターの座標を移動
+        //キャラクターの座標を更新
         updateMouseState();
 
-        //60msごとに的を移動
-        if( PASSED_TIME( target_timer ) > 60 )
+        //クリックで弾を生成
+        if( PASSED_TIME( generate_bullet_timer ) > 60 )
         {
-            SET_TIMER( target_timer );
-            for( i = 0; i < MAX_TARGET_NUM; i++ )
+            SET_TIMER( generate_bullet_timer );
+            //自分の弾を生成
+            if( self_mouse.click_left && self_mouse.click_left_pass == FALSE )
             {
-                if( target[ i ].isExist )
-                {
-                    target[ i ].y++;
-                    //範囲外に出れば削除
-                    if( target[ i ].y > DISPLAY_MAX_CHAR_Y )
-                    {
-                        target[ i ].isExist = FALSE;
-                    }
-                }
+                
             }
+            self_mouse.click_left_pass = self_mouse.click_left;
         }
+
         //10msごとに弾を移動
         if( PASSED_TIME( bullet_timer ) > 10 )
         {
@@ -182,7 +182,8 @@ void mainLoop( void )
                 }
             }
         }
-        //1sごとに的を追加
+
+        //1000msごとに的を追加
         if( PASSED_TIME( generate_target_timer ) > 1000 )
         {
             SET_TIMER( generate_target_timer );
@@ -197,47 +198,77 @@ void mainLoop( void )
                 }
             }
         }
-        //当たり判定
-        //自分と敵の弾が重なっていないか判定
-        for( i = 0; i < MAX_BULLET_NUM; i++ )
+
+        //60msごとに的を移動
+        if( PASSED_TIME( target_timer ) > 60 )
         {
-            if( bullet[ i ].isExist == TRUE && bullet[ i ].type == ENEMY_BULLET )
+            SET_TIMER( target_timer );
+            for( i = 0; i < MAX_TARGET_NUM; i++ )
             {
-                if( bullet[ i ].x + bullet[ i ].size_x > self.x && bullet[ i ].x < self.x + self.size_x && bullet[ i ].y + bullet[ i ].size_y > self.y && bullet[ i ].y < self.y + self.size_y )
+                if( target[ i ].isExist )
                 {
-                    bullet[ i ].isExist = FALSE;
-                    point_enemy += 10;
+                    target[ i ].y++;
+                    //範囲外に出れば削除
+                    if( target[ i ].y > DISPLAY_MAX_CHAR_Y )
+                    {
+                        target[ i ].isExist = FALSE;
+                    }
                 }
             }
         }
-        //敵と自分の弾が重なっていないか判定
-        for( i = 0; i < MAX_BULLET_NUM; i++ )
+
+        //敵の弾の自分への着弾判定
+        if( self_mouse.click_right == FALSE )
         {
-            if( bullet[ i ].isExist == TRUE && bullet[ i ].type == SELF_BULLET )
+            for( i = 0; i < MAX_BULLET_NUM; i++ )
             {
-                if( bullet[ i ].x + bullet[ i ].size_x > self.x && bullet[ i ].x < self.x + self.size_x && bullet[ i ].y + bullet[ i ].size_y > self.y && bullet[ i ].y < self.y + self.size_y )
+                if( bullet[ i ].isExist == TRUE && bullet[ i ].type == ENEMY_BULLET )
                 {
-                    bullet[ i ].isExist = FALSE;
-                    point_self += 10;
+                    if( bullet[ i ].x + bullet[ i ].size_x > self.x && bullet[ i ].x < self.x + self.size_x && bullet[ i ].y + bullet[ i ].size_y > self.y && bullet[ i ].y < self.y + self.size_y )
+                    {
+                        bullet[ i ].isExist = FALSE;
+                        point_enemy += 10;
+                    }
                 }
             }
         }
+
+        //自分の弾の敵への着弾判定
+        if( enemy_mouse.click_right == FALSE )
+        {
+            for( i = 0; i < MAX_BULLET_NUM; i++ )
+            {
+                if( bullet[ i ].isExist == TRUE && bullet[ i ].type == SELF_BULLET )
+                {
+                    if( bullet[ i ].x + bullet[ i ].size_x > self.x && bullet[ i ].x < self.x + self.size_x && bullet[ i ].y + bullet[ i ].size_y > self.y && bullet[ i ].y < self.y + self.size_y )
+                    {
+                        bullet[ i ].isExist = FALSE;
+                        point_self += 10;
+                    }
+                }
+            }
+        }
+
         //弾丸と的が重なっていないか判定
         for( i = 0; i < MAX_TARGET_NUM; i++ )
         {
-            for( j = 0; j < MAX_BULLET_NUM; j++ )
+            if( target[ i ].isExist )
             {
-                if( bullet[ j ].isExist == TRUE )
+                for( j = 0; j < MAX_BULLET_NUM; j++ )
                 {
-                    if( bullet[ j ].x + bullet[ j ].size_x > target[ i ].x && bullet[ j ].x < target[ i ].x + target[ i ].size_x && bullet[ j ].y + bullet[ j ].size_y > target[ i ].y && bullet[ j ].y < target[ i ].y + target[ i ].size_y )
+                    if( bullet[ j ].isExist )
                     {
-                        if( bullet[ j ].type == SELF_BULLET )
+                        if( bullet[ j ].x + bullet[ j ].size_x > target[ i ].x && bullet[ j ].x < target[ i ].x + target[ i ].size_x && bullet[ j ].y + bullet[ j ].size_y > target[ i ].y && bullet[ j ].y < target[ i ].y + target[ i ].size_y )
                         {
-                            point_self += 1;
-                        }
-                        else
-                        {
-                            point_enemy += 1;
+                            if( bullet[ j ].type == SELF_BULLET )
+                            {
+                                point_self += 1;
+                            }
+                            else
+                            {
+                                point_enemy += 1;
+                            }
+                            target[ i ].isExist = FALSE;
                         }
                     }
                 }

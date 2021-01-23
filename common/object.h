@@ -1,7 +1,7 @@
 #ifndef OBJECT_H_
 #define OBJECT_H_
 
-#define MAX_TARGET_NUM 32
+#define MAX_TARGET_NUM 4
 #define MAX_BULLET_NUM 64
 
 typedef struct _COMMON_OBJECT_

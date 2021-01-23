@@ -41,13 +41,13 @@ const int char_target4[2][4] =
     {7,7,7,7}
 };
 
-const int char_bullet_self[2][8] =
+const int char_bullet_enemy[2][8] =
 {
     {1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1}
 };
 
-const int char_bullet_enemy[2][8] =
+const int char_bullet_self[2][8] =
 {
     {4,4,4,4,4,4,4,4},
     {4,4,4,4,4,4,4,4}

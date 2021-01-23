@@ -4,8 +4,6 @@
 #include <windows.h>
 #include <string.h>
 
-//#define DWORD (unsigned long)
-
 void printErrorMessage( char* file_name, char* error_type );
 
 #endif /* DEBUG_H_ */

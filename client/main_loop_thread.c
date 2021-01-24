@@ -17,6 +17,8 @@ extern MouseState self_mouse, enemy_mouse;
 extern BOOL end_program;
 extern BOOL game_end;
 extern BOOL target_generate;
+extern BOOL bullet_enemy_generate;
+extern BOOL bullet_self_generate;
 extern BOOL start_program;
 extern short point_self, point_enemy;
 extern char remain_time;
@@ -172,8 +174,12 @@ void mainLoop( void )
     SET_TIMER( generate_target_timer );
 
     //60秒間ループ
-    while( remain_time > 0 || end_program == FALSE )
+    while( remain_time > 0 || start_program == FALSE )
     {
+        if( start_program == FALSE && PASSED_TIME( main_timer ) > 10000 )
+        {
+            start_program = TRUE;
+        }
         //残り時間設定
         //remain_time = 60 - PASSED_TIME( main_timer ) / 1000;
         number[3].type = CHAR_NUM( remain_time / 10 );
@@ -185,13 +191,13 @@ void mainLoop( void )
         number[2].type = CHAR_NUM( point_self % 10 );
         number[5].type = CHAR_NUM( point_enemy / 100 );
         number[6].type = CHAR_NUM( point_enemy % 100 / 10 );
-        number[7].type = CHAR_NUM( point_enemy / 100 );
+        number[7].type = CHAR_NUM( point_enemy % 10 );
 
         //キャラクターの座標を更新
         updateMouseState();
 
         //自分の弾を生成
-        if( self_mouse.click_left && self_mouse.click_left_pass == FALSE && self_mouse.click_right == FALSE )
+        if( bullet_self_generate && self_mouse.click_right == FALSE )
         {
             for( i = 0; i < MAX_BULLET_NUM; i++ )
             {
@@ -205,6 +211,8 @@ void mainLoop( void )
                 }
             }
         }
+        bullet_self_generate = FALSE;
+        
 
         //敵の弾を生成
         if( enemy_mouse.click_left && enemy_mouse.click_left_pass == FALSE && enemy_mouse.click_right == FALSE )
@@ -217,6 +225,7 @@ void mainLoop( void )
                     bullet[ i ].type = TYPE_BULLET_ENEMY;
                     bullet[ i ].x = enemy.x;
                     bullet[ i ].y = enemy.y + enemy.size_y / 2;
+                    bullet_enemy_generate = TRUE;
                     break;
                 }
             }
@@ -248,47 +257,6 @@ void mainLoop( void )
             }
         }
 
-        /*
-        //500msごとに的を追加
-        if( PASSED_TIME( generate_target_timer ) > 500 )
-        {
-            SET_TIMER( generate_target_timer );
-            for( i = 0; i < MAX_TARGET_NUM; i++ )
-            {
-                if( target[ i ].isExist == FALSE )
-                {
-                    target[ i ].isExist = TRUE;
-                    target[ i ].y = 0;
-                    target[ i ].x = rand() % ( DISPLAY_MAX_CHAR_X / 2 ) + DISPLAY_MAX_CHAR_X / 4;
-                    //的の種類をランダムに生成
-                    switch( rand() & 0x03 )
-                    {
-                        case 0x00:
-                            target[ i ].type = TYPE_TARGET1;
-                            target[ i ].size_x = 10;
-                            target[ i ].size_y = 5;
-                            break;
-                        case 0x01:
-                            target[ i ].type = TYPE_TARGET2;
-                            target[ i ].size_x = 10;
-                            target[ i ].size_y = 5;
-                            break;
-                        case 0x02:
-                            target[ i ].type = TYPE_TARGET3;
-                            target[ i ].size_x = 6;
-                            target[ i ].size_y = 3;
-                            break;
-                        case 0x03:
-                            target[ i ].type = TYPE_TARGET4;
-                            target[ i ].size_x = 4;
-                            target[ i ].size_y = 2;
-                            break;
-                    }
-                    break;
-                }
-            }
-        }*/
-
         //100msごとに的を移動
         if( PASSED_TIME( target_timer ) > 100 )
         {
@@ -306,85 +274,9 @@ void mainLoop( void )
                 }
             }
         }
-
-        //敵の弾の自分への着弾判定
-        if( self_mouse.click_right == FALSE )
-        {
-            for( i = 0; i < MAX_BULLET_NUM; i++ )
-            {
-                if( bullet[ i ].isExist == TRUE && bullet[ i ].type == TYPE_BULLET_ENEMY )
-                {
-                    if( bullet[ i ].x + bullet[ i ].size_x > self.x && bullet[ i ].x < self.x + self.size_x && bullet[ i ].y + bullet[ i ].size_y > self.y && bullet[ i ].y < self.y + self.size_y )
-                    {
-                        bullet[ i ].isExist = FALSE;
-                        point_enemy += 10;
-                        if( point_enemy > 999 )
-                        {
-                            point_enemy = 999;
-                        }
-                    }
-                }
-            }
-        }
-
-        //自分の弾の敵への着弾判定
-        if( enemy_mouse.click_right == FALSE )
-        {
-            for( i = 0; i < MAX_BULLET_NUM; i++ )
-            {
-                if( bullet[ i ].isExist == TRUE && bullet[ i ].type == TYPE_BULLET_SELF )
-                {
-                    if( bullet[ i ].x + bullet[ i ].size_x > enemy.x && bullet[ i ].x < enemy.x + enemy.size_x && bullet[ i ].y + bullet[ i ].size_y > enemy.y && bullet[ i ].y < enemy.y + enemy.size_y )
-                    {
-                        bullet[ i ].isExist = FALSE;
-                        point_self += 10;
-                        if( point_self > 999 )
-                        {
-                            point_self = 999;
-                        }
-                    }
-                }
-            }
-        }
-
-        //弾丸と的が重なっていないか判定
-        for( i = 0; i < MAX_TARGET_NUM; i++ )
-        {
-            if( target[ i ].isExist )
-            {
-                for( j = 0; j < MAX_BULLET_NUM; j++ )
-                {
-                    if( bullet[ j ].isExist )
-                    {
-                        if( bullet[ j ].x + bullet[ j ].size_x > target[ i ].x && bullet[ j ].x < target[ i ].x + target[ i ].size_x && bullet[ j ].y + bullet[ j ].size_y > target[ i ].y && bullet[ j ].y < target[ i ].y + target[ i ].size_y )
-                        {
-                            if( bullet[ j ].type == TYPE_BULLET_SELF )
-                            {
-                                point_self += 1;
-                                if( point_self > 999 )
-                                {
-                                    point_self = 999;
-                                }
-                            }
-                            else
-                            {
-                                point_enemy += 1;
-                                if( point_enemy > 999 )
-                                {
-                                    point_enemy = 999;
-                                }
-                            }
-                            //着弾すれば的を削除
-                            target[ i ].isExist = FALSE;
-                        }
-                    }
-                }
-            }
-        }
     }
 
     //終了処理
-    game_end = TRUE;
     self.isExist = FALSE;
     enemy.isExist = FALSE;
     for( i = 0; i < MAX_BULLET_NUM; i++ )
@@ -395,8 +287,8 @@ void mainLoop( void )
     {
         target[ i ].isExist = FALSE;
     }
+    game_end = TRUE;
     ( void )generate_target_timer;
-    ( void )main_timer;
 }
 
 
@@ -412,9 +304,9 @@ void updateMouseState( void )
     }
     
     //カーソルの位置を範囲内に収める
-    if( pt.x / 8 > DISPLAY_MAX_CHAR_X - ( signed )enemy.size_x / 2 )
+    if( pt.x / 8 > DISPLAY_MAX_CHAR_X - ( signed )enemy.size_x / 2 - 2 )
     {
-        pt.x = ( DISPLAY_MAX_CHAR_X / 2 - ( signed )enemy.size_x / 2 ) * 8;
+        pt.x = ( DISPLAY_MAX_CHAR_X - ( signed )enemy.size_x / 2 - 2 ) * 8;
         if( !SetCursorPos( pt.x, pt.y ) )
         {
             printErrorMessage( "main_loop_thread.c", "SetCursorPos()" );
@@ -430,9 +322,9 @@ void updateMouseState( void )
             return;
         }
     }
-    if( pt.y / 16 < ( signed )enemy.size_y / 2 - 1 )
+    if( pt.y / 16 < ( signed )enemy.size_y / 2 - 3 )
     {
-        pt.y = ( ( signed )enemy.size_y / 2 - 1 ) * 16;
+        pt.y = ( ( signed )enemy.size_y / 2 - 3 ) * 16;
         if( !SetCursorPos( pt.x, pt.y ) )
         {
             printErrorMessage( "main_loop_thread.c", "SetCursorPos()" );

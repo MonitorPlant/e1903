@@ -16,6 +16,8 @@ MouseState self_mouse, enemy_mouse;
 BOOL end_program = FALSE; //プログラム終了もしくは強制終了
 BOOL game_end = FALSE; //ゲーム正常終了
 BOOL target_generate = FALSE;
+BOOL bullet_self_generate = FALSE;
+BOOL bullet_enemy_generate = FALSE;
 BOOL start_program = FALSE;
 short point_self = 0, point_enemy = 0;
 char remain_time = 0;

@@ -15,6 +15,8 @@ extern MouseState self_mouse, enemy_mouse;
 extern BOOL end_program;
 extern BOOL game_end;
 extern BOOL target_generate;
+extern BOOL bullet_self_generate;
+extern BOOL bullet_enemy_generate;
 extern short point_self, point_enemy;
 extern char remain_time;
 
@@ -33,9 +35,6 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 	BOOL yes = 1;
     char send_data[11];
     char receive_data[4];
-
-	//Sleep( 5000 );
-	//enemy.isExist = TRUE;
 	
 	//初期化
 	WSAStartup( MAKEWORD( 2, 0 ), &wsaData );
@@ -115,7 +114,12 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 		send_data[ 5 ] = point_enemy % 100;
         send_data[ 6 ] = self.x - 127;
         send_data[ 7 ] = self.y;
-        send_data[ 8 ] = ( self_mouse.click_wheel << 2 ) + ( self_mouse.click_right << 1 ) + ( self_mouse.click_left );
+		send_data[ 8 ] = bullet_self_generate << 3;
+		bullet_self_generate = FALSE;
+        send_data[ 8 ] += self_mouse.click_wheel << 2;
+		send_data[ 8 ] += self_mouse.click_right << 1;
+		send_data[ 8 ] += self_mouse.click_left;
+
 		if( target_generate )
 		{
 			int i;
@@ -147,6 +151,7 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
         enemy.y = receive_data[ 2 ];
 		enemy_mouse.click_wheel_pass = enemy_mouse.click_wheel;
 		enemy_mouse.click_left_pass = enemy_mouse.click_left;
+		bullet_enemy_generate = ( receive_data[ 3 ] >> 3 ) & 1;
         enemy_mouse.click_wheel = ( receive_data[ 3 ] >> 2 ) & 1;
         enemy_mouse.click_right = ( receive_data[ 3 ] >> 1 ) & 1;
         enemy_mouse.click_left = receive_data[ 3 ] & 1;

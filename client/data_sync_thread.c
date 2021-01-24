@@ -15,6 +15,8 @@ extern MouseState self_mouse, enemy_mouse;
 extern BOOL end_program;
 extern BOOL game_end;
 extern BOOL target_generate;
+extern BOOL bullet_enemy_generate;
+extern BOOL bullet_self_generate;
 extern BOOL start_program;
 extern short point_self, point_enemy;
 extern char remain_time;
@@ -93,8 +95,6 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 
 
     self.isExist = TRUE; //メインスレッドに相手が見つかったことを報告
-    Sleep( 300 );
-    start_program = TRUE;
 	
 	while( game_end == FALSE )
 	{
@@ -102,7 +102,11 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 		send_data[ 0 ] = end_program;
         send_data[ 1 ] = enemy.x - 127;
         send_data[ 2 ] = enemy.y;
-        send_data[ 3 ] = ( enemy_mouse.click_wheel << 2 ) + ( enemy_mouse.click_right << 1 ) + ( self_mouse.click_left );
+        send_data[ 3 ] = bullet_enemy_generate << 3;
+        bullet_enemy_generate = FALSE;
+        send_data[ 3 ] += enemy_mouse.click_wheel << 2;
+        send_data[ 3 ] += enemy_mouse.click_right << 1;
+        send_data[ 3 ] += self_mouse.click_left;
 
         //データを送受信
 		send( sock, send_data, sizeof( send_data ), 0 );
@@ -116,11 +120,12 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
         point_enemy = receive_data[ 4 ] * 100 + receive_data[ 5 ];
         self.x = receive_data[ 6 ] + 127;
         self.y = receive_data[ 7 ];
-		enemy_mouse.click_wheel_pass = enemy_mouse.click_wheel;
-		enemy_mouse.click_left_pass = enemy_mouse.click_left;
-        enemy_mouse.click_wheel = ( receive_data[ 8 ] >> 2 ) & 1;
-        enemy_mouse.click_right = ( receive_data[ 8 ] >> 1 ) & 1;
-        enemy_mouse.click_left = receive_data[ 8 ] & 1;
+		self_mouse.click_wheel_pass = self_mouse.click_wheel;
+		self_mouse.click_left_pass = self_mouse.click_left;
+        bullet_self_generate = ( receive_data[ 8 ] >> 3 ) & 1;
+        self_mouse.click_wheel = ( receive_data[ 8 ] >> 2 ) & 1;
+        self_mouse.click_right = ( receive_data[ 8 ] >> 1 ) & 1;
+        self_mouse.click_left = receive_data[ 8 ] & 1;
         if( receive_data[ 9 ] != 0 )
         {
             int i;
@@ -160,7 +165,7 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
                 }
             }
         }
-
+        
 		Sleep( 1 );
 	}
 	

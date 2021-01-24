@@ -17,6 +17,8 @@ extern MouseState self_mouse, enemy_mouse;
 extern BOOL end_program;
 extern BOOL game_end;
 extern BOOL target_generate;
+extern BOOL bullet_self_generate;
+extern BOOL bullet_enemy_generate;
 extern short point_self, point_enemy;
 extern char remain_time;
 
@@ -184,7 +186,7 @@ void mainLoop( void )
         number[2].type = CHAR_NUM( point_self % 10 );
         number[5].type = CHAR_NUM( point_enemy / 100 );
         number[6].type = CHAR_NUM( point_enemy % 100 / 10 );
-        number[7].type = CHAR_NUM( point_enemy / 100 );
+        number[7].type = CHAR_NUM( point_enemy % 10 );
 
         //キャラクターの座標を更新
         updateMouseState();
@@ -200,13 +202,14 @@ void mainLoop( void )
                     bullet[ i ].type = TYPE_BULLET_SELF;
                     bullet[ i ].x = self.x + self.size_x;
                     bullet[ i ].y = self.y + self.size_y / 2;
+                    bullet_self_generate = TRUE;
                     break;
                 }
             }
         }
 
         //敵の弾を生成
-        if( enemy_mouse.click_left && enemy_mouse.click_left_pass == FALSE && enemy_mouse.click_right == FALSE )
+        if( bullet_enemy_generate && enemy_mouse.click_right == FALSE )
         {
             for( i = 0; i < MAX_BULLET_NUM; i++ )
             {
@@ -220,6 +223,7 @@ void mainLoop( void )
                 }
             }
         }
+        bullet_enemy_generate = FALSE;
 
         //10msごとに弾を移動
         if( PASSED_TIME( bullet_timer ) > 10 )
@@ -316,7 +320,7 @@ void mainLoop( void )
                     if( bullet[ i ].x + bullet[ i ].size_x > self.x && bullet[ i ].x < self.x + self.size_x && bullet[ i ].y + bullet[ i ].size_y > self.y && bullet[ i ].y < self.y + self.size_y )
                     {
                         bullet[ i ].isExist = FALSE;
-                        point_enemy += 10;
+                        point_enemy += 5;
                         if( point_enemy > 999 )
                         {
                             point_enemy = 999;
@@ -336,7 +340,7 @@ void mainLoop( void )
                     if( bullet[ i ].x + bullet[ i ].size_x > enemy.x && bullet[ i ].x < enemy.x + enemy.size_x && bullet[ i ].y + bullet[ i ].size_y > enemy.y && bullet[ i ].y < enemy.y + enemy.size_y )
                     {
                         bullet[ i ].isExist = FALSE;
-                        point_self += 10;
+                        point_self += 5;
                         if( point_self > 999 )
                         {
                             point_self = 999;
@@ -383,7 +387,6 @@ void mainLoop( void )
     }
 
     //終了処理
-    game_end = TRUE;
     self.isExist = FALSE;
     enemy.isExist = FALSE;
     for( i = 0; i < MAX_BULLET_NUM; i++ )
@@ -394,6 +397,7 @@ void mainLoop( void )
     {
         target[ i ].isExist = FALSE;
     }
+    game_end = TRUE;
 }
 
 
@@ -418,18 +422,18 @@ void updateMouseState( void )
             return;
         }
     }
-    if( pt.x / 8 < ( signed )self.size_x / 2 - 1 )
+    if( pt.x / 8 < ( signed )self.size_x / 2 - 2 )
     {
-        pt.x = ( ( signed )self.size_x / 2 - 1 ) * 8;
+        pt.x = ( ( signed )self.size_x / 2 - 2 ) * 8;
         if( !SetCursorPos( pt.x, pt.y ) )
         {
             printErrorMessage( "main_loop_thread.c", "SetCursorPos()" );
             return;
         }
     }
-    if( pt.y / 16 < ( signed )self.size_y / 2 - 1 )
+    if( pt.y / 16 < ( signed )self.size_y / 2 - 3 )
     {
-        pt.y = ( ( signed )self.size_y / 2 - 1 ) * 16;
+        pt.y = ( ( signed )self.size_y / 2 - 3 ) * 16;
         if( !SetCursorPos( pt.x, pt.y ) )
         {
             printErrorMessage( "main_loop_thread.c", "SetCursorPos()" );

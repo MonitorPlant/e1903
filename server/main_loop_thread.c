@@ -4,7 +4,7 @@
 
 #include "../common/debug.h"
 #include "../common/object.h"
-#include "graphics_thread.h"
+#include "../common/graphics_thread.h"
 #include "main_loop_thread.h"
 
 extern CommonObject background;
@@ -399,7 +399,7 @@ void updateMouseState( void )
     }
 
     //座標をコピー、各ボタンの状態を更新
-    self.x = pt.x / 8 - 14;
+    self.x = pt.x / 8 - 13;
     self.y = pt.y / 18 - 3;
     if( self.x < 0 )
     {

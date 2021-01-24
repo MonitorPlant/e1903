@@ -2,7 +2,7 @@
 
 #include "../common/debug.h"
 #include "main_loop_thread.h"
-#include "graphics_thread.h"
+#include "../common/graphics_thread.h"
 #include "data_sync_thread.h"
 #include "../common/object.h"
 
@@ -70,7 +70,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
         bullet[ i ].size_x = 8;
         bullet[ i ].size_y = 2;
     }
-    
+
 
     //グラフィックススレッド起動
     GraphicsThreadHandle = CreateThread(

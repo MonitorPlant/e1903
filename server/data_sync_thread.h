@@ -4,7 +4,7 @@
 #include <windows.h>
 #include <winsock2.h>
 
-#include "graphics_thread.h"
+#include "../common/graphics_thread.h"
 #include "../common/object.h"
 #include "../common/debug.h"
 

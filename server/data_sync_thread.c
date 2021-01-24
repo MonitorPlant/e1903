@@ -60,7 +60,7 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 	recv( sock, pair_address, sizeof( pair_address ), 0 );
 	
 	closesocket( sock ); //UDPのソケットを閉じる
-	
+
 	Sleep( 50 );
 	
 	

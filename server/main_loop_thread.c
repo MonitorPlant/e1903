@@ -19,6 +19,7 @@ extern BOOL game_end;
 extern BOOL target_generate;
 extern BOOL bullet_self_generate;
 extern BOOL bullet_enemy_generate;
+extern int last_target_generate;
 extern short point_self, point_enemy;
 extern char remain_time;
 
@@ -260,6 +261,7 @@ void mainLoop( void )
                 if( target[ i ].isExist == FALSE )
                 {
                     target_generate = TRUE;
+                    last_target_generate = i;
                     target[ i ].isExist = TRUE;
                     target[ i ].y = 0;
                     target[ i ].x = rand() % ( DISPLAY_MAX_CHAR_X / 2 ) + DISPLAY_MAX_CHAR_X / 4;
@@ -387,6 +389,7 @@ void mainLoop( void )
     }
 
     //終了処理
+    game_end = TRUE;
     self.isExist = FALSE;
     enemy.isExist = FALSE;
     for( i = 0; i < MAX_BULLET_NUM; i++ )
@@ -397,7 +400,6 @@ void mainLoop( void )
     {
         target[ i ].isExist = FALSE;
     }
-    game_end = TRUE;
 }
 
 

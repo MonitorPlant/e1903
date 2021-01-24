@@ -96,7 +96,7 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 
     self.isExist = TRUE; //メインスレッドに相手が見つかったことを報告
 	
-	while( game_end == FALSE )
+	while( end_program == FALSE )
 	{
         //送信内容を書き込み
 		send_data[ 0 ] = end_program;
@@ -114,7 +114,7 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 		
 
         //受信内容をコピー
-		end_program = receive_data[ 0 ];
+		game_end = receive_data[ 0 ];
         remain_time = receive_data[ 1 ];
         point_self = receive_data[ 2 ] * 100 + receive_data[ 3 ];
         point_enemy = receive_data[ 4 ] * 100 + receive_data[ 5 ];
@@ -126,6 +126,7 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
         self_mouse.click_wheel = ( receive_data[ 8 ] >> 2 ) & 1;
         self_mouse.click_right = ( receive_data[ 8 ] >> 1 ) & 1;
         self_mouse.click_left = receive_data[ 8 ] & 1;
+        //的を生成
         if( receive_data[ 9 ] != 0 )
         {
             int i;
@@ -136,26 +137,26 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
                     target_generate = TRUE;
                     target[ i ].isExist = TRUE;
                     target[ i ].y = 0;
-                    target[ i ].x = receive_data[ 9 ];
+                    target[ i ].x = receive_data[ 9 ] + 64;
                     //的の種類をランダムに生成
                     switch( receive_data[ 10 ] )
                     {
-                        case 0x00:
+                        case TYPE_TARGET1:
                             target[ i ].type = TYPE_TARGET1;
                             target[ i ].size_x = 10;
                             target[ i ].size_y = 5;
                             break;
-                        case 0x01:
+                        case TYPE_TARGET2:
                             target[ i ].type = TYPE_TARGET2;
                             target[ i ].size_x = 10;
                             target[ i ].size_y = 5;
                             break;
-                        case 0x02:
+                        case TYPE_TARGET3:
                             target[ i ].type = TYPE_TARGET3;
                             target[ i ].size_x = 6;
                             target[ i ].size_y = 3;
                             break;
-                        case 0x03:
+                        case TYPE_TARGET4:
                             target[ i ].type = TYPE_TARGET4;
                             target[ i ].size_x = 4;
                             target[ i ].size_y = 2;

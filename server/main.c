@@ -18,6 +18,7 @@ BOOL game_end = FALSE; //ゲーム正常終了
 BOOL target_generate = FALSE;
 BOOL bullet_self_generate = FALSE;
 BOOL bullet_enemy_generate = FALSE;
+int last_target_generate = 0;
 short point_self = 0, point_enemy = 0;
 char remain_time = 0;
 

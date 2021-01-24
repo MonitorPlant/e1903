@@ -17,6 +17,7 @@ extern BOOL game_end;
 extern BOOL target_generate;
 extern BOOL bullet_self_generate;
 extern BOOL bullet_enemy_generate;
+extern int last_target_generate;
 extern short point_self, point_enemy;
 extern char remain_time;
 
@@ -103,10 +104,10 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 		Sleep( 10 );
 	}
 	
-	while( game_end == FALSE )
+	while( end_program == FALSE )
 	{
         //送信内容を書き込み
-		send_data[ 0 ] = end_program;
+		send_data[ 0 ] = game_end;
         send_data[ 1 ] = remain_time;
 		send_data[ 2 ] = point_self / 100;
 		send_data[ 3 ] = point_self % 100;
@@ -124,15 +125,8 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 		{
 			int i;
 			target_generate = FALSE;
-			for( i = 0; i < MAX_TARGET_NUM; i++ )
-			{
-				if( target[ i ].y < 10 )
-				{
-					send_data[ 9 ] = target[ i ].x;
-					send_data[ 10 ] = target[ i ].type;
-					break;
-				}
-			}
+			send_data[ 9 ] = target[ last_target_generate ].x - 64;
+			send_data[ 10 ] = target[ last_target_generate ].type;
 		}
 		else
 		{

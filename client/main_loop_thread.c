@@ -154,10 +154,8 @@ DWORD WINAPI MainLoopThread( LPVOID arg )
 void mainLoop( void )
 {
     int i, j;
-    HTIMER main_timer;
     HTIMER target_timer;
     HTIMER bullet_timer;
-    HTIMER generate_target_timer;
 
     //初期化
     for( i = 0; i < 8; i++ )
@@ -168,18 +166,12 @@ void mainLoop( void )
     self.isExist = TRUE;
     enemy.isExist = TRUE;
     point_enemy = point_self = 0;
-    SET_TIMER( main_timer );
-    SET_TIMER( target_timer );
     SET_TIMER( bullet_timer );
-    SET_TIMER( generate_target_timer );
+    SET_TIMER( target_timer );
 
     //60秒間ループ
-    while( remain_time > 0 || start_program == FALSE )
+    while( game_end == FALSE )
     {
-        if( start_program == FALSE && PASSED_TIME( main_timer ) > 10000 )
-        {
-            start_program = TRUE;
-        }
         //残り時間設定
         //remain_time = 60 - PASSED_TIME( main_timer ) / 1000;
         number[3].type = CHAR_NUM( remain_time / 10 );
@@ -212,7 +204,6 @@ void mainLoop( void )
             }
         }
         bullet_self_generate = FALSE;
-        
 
         //敵の弾を生成
         if( enemy_mouse.click_left && enemy_mouse.click_left_pass == FALSE && enemy_mouse.click_right == FALSE )
@@ -274,6 +265,25 @@ void mainLoop( void )
                 }
             }
         }
+
+        //弾丸と的が重なっていないか判定
+        for( i = 0; i < MAX_TARGET_NUM; i++ )
+        {
+            if( target[ i ].isExist )
+            {
+                for( j = 0; j < MAX_BULLET_NUM; j++ )
+                {
+                    if( bullet[ j ].isExist )
+                    {
+                        if( bullet[ j ].x + bullet[ j ].size_x > target[ i ].x && bullet[ j ].x < target[ i ].x + target[ i ].size_x && bullet[ j ].y + bullet[ j ].size_y > target[ i ].y && bullet[ j ].y < target[ i ].y + target[ i ].size_y )
+                        {
+                            //着弾すれば的を削除
+                            target[ i ].isExist = FALSE;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     //終了処理
@@ -288,7 +298,6 @@ void mainLoop( void )
         target[ i ].isExist = FALSE;
     }
     game_end = TRUE;
-    ( void )generate_target_timer;
 }
 
 

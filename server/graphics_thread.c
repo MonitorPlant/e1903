@@ -54,6 +54,7 @@ DWORD WINAPI GraphicsThread( LPVOID arg )
         end_program = TRUE;
         return 0;
     }
+    ShowCursor( FALSE );
 	
 	coord.X = rc.Right;
 	coord.Y = rc.Bottom;

@@ -23,7 +23,7 @@ extern const int char_self[15][30], char_self_shield[15][30], char_enemy[15][30]
 extern const int char_rules[67][236], char_result_self[67][236], char_result_enemy[67][236], char_title[67][236];
 extern const int char_num[10][7][7];
 
-HANDLE hCon1, hCon2;
+HANDLE hCon;
 
 DWORD WINAPI GraphicsThread( LPVOID arg )
 {
@@ -31,34 +31,34 @@ DWORD WINAPI GraphicsThread( LPVOID arg )
 
     SMALL_RECT rc = { 0, 0, DISPLAY_MAX_CHAR_X, DISPLAY_MAX_CHAR_Y };
 	COORD coord;
+    CONSOLE_CURSOR_INFO cci;
 	
 	AllocConsole();
 	SetConsoleTitle( TEXT( "STAR WARS" ) );
-	
-	hCon1 = CreateConsoleScreenBuffer(
-		GENERIC_WRITE,
-		0,
-		NULL,
-		CONSOLE_TEXTMODE_BUFFER,
-		NULL
-    );
-	
-	hCon2 = CreateConsoleScreenBuffer(
-		GENERIC_WRITE,
-		0,
-		NULL,
-		CONSOLE_TEXTMODE_BUFFER,
-		NULL
-    );
+
+    hCon = GetStdHandle( STD_OUTPUT_HANDLE );
+
+    if( hCon == NULL )
+    {
+        printErrorMessage( "graphics_thread.c", "GetStdHandle()" );
+        end_program = TRUE;
+        return 0;
+    }
+
+    //カーソルを非表示に設定
+    GetConsoleCursorInfo( hCon, &cci );
+    cci.bVisible = FALSE;
+    if( SetConsoleCursorInfo( hCon, &cci ) == NULL )
+    {
+        printErrorMessage( "graphics_thread.c", "SetConsoleCursorInfo()" );
+        end_program = TRUE;
+        return 0;
+    }
 	
 	coord.X = rc.Right;
 	coord.Y = rc.Bottom;
-	
-	SetConsoleScreenBufferSize(hCon1, coord);
-	SetConsoleScreenBufferSize(hCon2, coord);
-	
-	SetConsoleWindowInfo(hCon1, TRUE, &rc);
-	SetConsoleWindowInfo(hCon2, TRUE, &rc);
+
+    SetConsoleWindowInfo(hCon, TRUE, &rc);
 
     while( end_program == FALSE )
     {
@@ -205,8 +205,8 @@ void displayUpdate(int map[DISPLAY_MAX_CHAR_Y][DISPLAY_MAX_CHAR_X] )
 			ci[i][j].Attributes = 16 * map[i][j];
 		}
 	}
-    WriteConsoleOutput(hCon1, (CHAR_INFO*)ci, buffer_size, start_coord, &sr);
-	SetConsoleActiveScreenBuffer(hCon1);
+    WriteConsoleOutput(hCon, (CHAR_INFO*)ci, buffer_size, start_coord, &sr);
+	SetConsoleActiveScreenBuffer(hCon);
     
     /*
 	if (buffer_1or2) {

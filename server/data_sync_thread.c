@@ -33,7 +33,7 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
     char send_data[6];
     char receive_data[4];
 
-	Sleep( 2000 );
+	Sleep( 5000 );
 	enemy.isExist = TRUE;
 	
 	//初期化
@@ -101,8 +101,10 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 		
 
         //受信内容をコピー
-        enemy.x = receive_data[ 0 ] / 8 + DISPLAY_MAX_CHAR_X / 2;
-        enemy.y = receive_data[ 1 ] / 18;
+        enemy.x = receive_data[ 0 ];
+        enemy.y = receive_data[ 1 ];
+		enemy_mouse.click_wheel_pass = enemy_mouse.click_wheel;
+		enemy_mouse.click_left_pass = enemy_mouse.click_left;
         enemy_mouse.click_wheel = ( receive_data[ 2 ] >> 2 ) & 1;
         enemy_mouse.click_right = ( receive_data[ 2 ] >> 1 ) & 1;
         enemy_mouse.click_left = receive_data[ 2 ] & 1;

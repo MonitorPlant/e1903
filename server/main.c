@@ -70,6 +70,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
         bullet[ i ].size_x = 8;
         bullet[ i ].size_y = 2;
     }
+    
 
     //グラフィックススレッド起動
     GraphicsThreadHandle = CreateThread(

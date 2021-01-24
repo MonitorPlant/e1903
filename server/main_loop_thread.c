@@ -96,6 +96,9 @@ DWORD WINAPI MainLoopThread( LPVOID arg )
     {
         Sleep( 10 );
     }
+    remain_time = 0;
+    Sleep( 20 );
+
 
     //ゲームスタート
     mainLoop();

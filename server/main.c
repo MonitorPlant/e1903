@@ -1,10 +1,10 @@
 #include <windows.h>
 
 #include "../common/debug.h"
-#include "main_loop_thread.h"
-#include "../common/graphics_thread.h"
-#include "data_sync_thread.h"
 #include "../common/object.h"
+#include "../common/graphics_thread.h"
+#include "main_loop_thread.h"
+#include "data_sync_thread.h"
 
 CommonObject background;
 CommonObject self, enemy;
@@ -15,6 +15,7 @@ MouseState self_mouse, enemy_mouse;
 
 BOOL end_program = FALSE; //プログラム終了もしくは強制終了
 BOOL game_end = FALSE; //ゲーム正常終了
+BOOL target_generate = FALSE;
 short point_self = 0, point_enemy = 0;
 char remain_time = 0;
 

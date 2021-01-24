@@ -14,6 +14,7 @@ extern MouseState self_mouse, enemy_mouse;
 
 extern BOOL end_program;
 extern BOOL game_end;
+extern BOOL target_generate;
 extern short point_self, point_enemy;
 extern char remain_time;
 
@@ -30,11 +31,11 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 	struct in_addr local_addr;
 	int len;
 	BOOL yes = 1;
-    char send_data[6];
+    char send_data[11];
     char receive_data[4];
 
-	Sleep( 5000 );
-	enemy.isExist = TRUE;
+	//Sleep( 5000 );
+	//enemy.isExist = TRUE;
 	
 	//初期化
 	WSAStartup( MAKEWORD( 2, 0 ), &wsaData );
@@ -61,7 +62,7 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 	
 	closesocket( sock ); //UDPのソケットを閉じる
 
-	Sleep( 50 );
+	Sleep( 500 );
 	
 	
 	//クライアントに自分のIPアドレスを送信する
@@ -72,28 +73,68 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 	sendto( sock, self_address, 16, 0, ( struct sockaddr *)&addr, sizeof( addr ) );
 	
 	closesocket( sock ); //UDPのソケットを閉じる
+	WSACleanup();
+
 	
-	
-	//TCPでデータを送信する
+	//TCPで接続を待つ
+	WSAStartup( MAKEWORD( 2, 0 ), &wsaData );
 	sock = socket( AF_INET, SOCK_STREAM, 0 ); //TCP送信用ソケット作成
-	addr.sin_addr.S_un.S_addr = inet_addr( pair_address ); //送信先を指定
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons( 2020 );
+	addr.sin_addr.S_un.S_addr = INADDR_ANY; //送信先を指定
 	
 	bind( sock, ( struct sockaddr *)&addr, sizeof( addr ) );
 	listen( sock, 5 ); //TCPクライントからの接続要求を待つ状態にする
 	len = sizeof( addr );
 	sock = accept( sock, ( struct sockaddr *)&addr, &len );
-
+	if( sock == INVALID_SOCKET )
+	{
+		char str[2] = { '0', '\0' };
+		str[0] = '0' + WSAGetLastError();
+		printErrorMessage( "data_sync_thread.c", str );
+		end_program = TRUE;
+		return -1;
+	}
+	memset( receive_data, 0, sizeof( receive_data ) );
 
     enemy.isExist = TRUE; //メインスレッドに相手が見つかったことを報告
+
+	while( self.isExist == FALSE )
+	{
+		Sleep( 10 );
+	}
 	
 	while( game_end == FALSE )
 	{
         //送信内容を書き込み
-        send_data[ 0 ] = remain_time;
-        send_data[ 1 ] = self.x;
-        send_data[ 2 ] = self.y;
-        send_data[ 3 ] = ( self_mouse.click_wheel << 2 ) + ( self_mouse.click_right << 1 ) + ( self_mouse.click_left );
-        
+		send_data[ 0 ] = end_program;
+        send_data[ 1 ] = remain_time;
+		send_data[ 2 ] = point_self / 100;
+		send_data[ 3 ] = point_self % 100;
+		send_data[ 4 ] = point_enemy / 100;
+		send_data[ 5 ] = point_enemy % 100;
+        send_data[ 6 ] = self.x - 127;
+        send_data[ 7 ] = self.y;
+        send_data[ 8 ] = ( self_mouse.click_wheel << 2 ) + ( self_mouse.click_right << 1 ) + ( self_mouse.click_left );
+		if( target_generate )
+		{
+			int i;
+			target_generate = FALSE;
+			for( i = 0; i < MAX_TARGET_NUM; i++ )
+			{
+				if( target[ i ].y < 10 )
+				{
+					send_data[ 9 ] = target[ i ].x;
+					send_data[ 10 ] = target[ i ].type;
+					break;
+				}
+			}
+		}
+		else
+		{
+			send_data[ 9 ] = 0;
+			send_data[ 10 ] = 0;
+		}
 
         //データを送受信
 		send( sock, send_data, sizeof( send_data ), 0 );
@@ -101,13 +142,14 @@ DWORD WINAPI DataSyncThread( LPVOID arg )
 		
 
         //受信内容をコピー
-        enemy.x = receive_data[ 0 ];
-        enemy.y = receive_data[ 1 ];
+		end_program = receive_data[ 0 ];
+        enemy.x = receive_data[ 1 ] + 127;
+        enemy.y = receive_data[ 2 ];
 		enemy_mouse.click_wheel_pass = enemy_mouse.click_wheel;
 		enemy_mouse.click_left_pass = enemy_mouse.click_left;
-        enemy_mouse.click_wheel = ( receive_data[ 2 ] >> 2 ) & 1;
-        enemy_mouse.click_right = ( receive_data[ 2 ] >> 1 ) & 1;
-        enemy_mouse.click_left = receive_data[ 2 ] & 1;
+        enemy_mouse.click_wheel = ( receive_data[ 3 ] >> 2 ) & 1;
+        enemy_mouse.click_right = ( receive_data[ 3 ] >> 1 ) & 1;
+        enemy_mouse.click_left = receive_data[ 3 ] & 1;
 
 		Sleep( 1 );
 	}

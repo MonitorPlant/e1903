@@ -16,6 +16,7 @@ extern MouseState self_mouse, enemy_mouse;
 
 extern BOOL end_program;
 extern BOOL game_end;
+extern BOOL target_generate;
 extern short point_self, point_enemy;
 extern char remain_time;
 
@@ -26,26 +27,12 @@ DWORD WINAPI MainLoopThread( LPVOID arg )
     int i;
     HTIMER screen_timer;
 
-    //対戦相手が見つかるまで待機
-    background.x = background.y = 0;
-    background.isExist = TRUE;
-    SET_TIMER( screen_timer );
-    while( enemy.isExist == FALSE )
-    {
-        //400msごとにロード画面を切り替え
-        switch( PASSED_TIME( screen_timer ) / 400 % 4 )
-        {
-            case 0: background.type = TYPE_LOADING0; break;
-            case 1: background.type = TYPE_LOADING1; break;
-            case 2: background.type = TYPE_LOADING2; break;
-            case 3: background.type = TYPE_LOADING3; break;
-        }
-        Sleep( 10 );
-    }
-
     
     //プレイヤーがマウスをクリックするまで待機 スペースを押すとルール説明
+    background.isExist = TRUE;
+    background.x = background.y = 0;
     background.type = TYPE_TITLE;
+    self.isExist = FALSE;
     while( self_mouse.click_left == FALSE )
     {
         updateMouseState();
@@ -73,6 +60,23 @@ DWORD WINAPI MainLoopThread( LPVOID arg )
             Sleep( 100 );
         }
         Sleep( 1 );
+    }
+    self.isExist = TRUE;
+
+
+    //対戦相手が見つかるまで待機
+    SET_TIMER( screen_timer );
+    while( enemy.isExist == FALSE )
+    {
+        //400msごとにロード画面を切り替え
+        switch( PASSED_TIME( screen_timer ) / 400 % 4 )
+        {
+            case 0: background.type = TYPE_LOADING0; break;
+            case 1: background.type = TYPE_LOADING1; break;
+            case 2: background.type = TYPE_LOADING2; break;
+            case 3: background.type = TYPE_LOADING3; break;
+        }
+        Sleep( 10 );
     }
     //背景を無効化
     background.isExist = FALSE;
@@ -201,6 +205,22 @@ void mainLoop( void )
             }
         }
 
+        //敵の弾を生成
+        if( enemy_mouse.click_left && enemy_mouse.click_left_pass == FALSE && enemy_mouse.click_right == FALSE )
+        {
+            for( i = 0; i < MAX_BULLET_NUM; i++ )
+            {
+                if( bullet[ i ].isExist == FALSE )
+                {
+                    bullet[ i ].isExist = TRUE;
+                    bullet[ i ].type = TYPE_BULLET_ENEMY;
+                    bullet[ i ].x = enemy.x;
+                    bullet[ i ].y = enemy.y + enemy.size_y / 2;
+                    break;
+                }
+            }
+        }
+
         //10msごとに弾を移動
         if( PASSED_TIME( bullet_timer ) > 10 )
         {
@@ -235,6 +255,7 @@ void mainLoop( void )
             {
                 if( target[ i ].isExist == FALSE )
                 {
+                    target_generate = TRUE;
                     target[ i ].isExist = TRUE;
                     target[ i ].y = 0;
                     target[ i ].x = rand() % ( DISPLAY_MAX_CHAR_X / 2 ) + DISPLAY_MAX_CHAR_X / 4;
@@ -388,12 +409,30 @@ void updateMouseState( void )
     }
     
     //カーソルの位置を範囲内に収める
-    if( pt.x > 959 - ( signed )self.size_x )
+    if( pt.x / 8 > DISPLAY_MAX_CHAR_X / 2 - ( signed )self.size_x / 2 )
     {
-        pt.x = 959 - ( signed )self.size_x;
+        pt.x = ( DISPLAY_MAX_CHAR_X / 2 - ( signed )self.size_x / 2 ) * 8;
         if( !SetCursorPos( pt.x, pt.y ) )
         {
-            printErrorMessage( "mouse.c", "SetCursorPos()" );
+            printErrorMessage( "main_loop_thread.c", "SetCursorPos()" );
+            return;
+        }
+    }
+    if( pt.x / 8 < ( signed )self.size_x / 2 - 1 )
+    {
+        pt.x = ( ( signed )self.size_x / 2 - 1 ) * 8;
+        if( !SetCursorPos( pt.x, pt.y ) )
+        {
+            printErrorMessage( "main_loop_thread.c", "SetCursorPos()" );
+            return;
+        }
+    }
+    if( pt.y / 16 < ( signed )self.size_y / 2 - 1 )
+    {
+        pt.y = ( ( signed )self.size_y / 2 - 1 ) * 16;
+        if( !SetCursorPos( pt.x, pt.y ) )
+        {
+            printErrorMessage( "main_loop_thread.c", "SetCursorPos()" );
             return;
         }
     }

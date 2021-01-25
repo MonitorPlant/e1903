@@ -158,6 +158,8 @@ void mainLoop( void )
     HTIMER target_timer;
     HTIMER bullet_timer;
     HTIMER generate_target_timer;
+    HTIMER generate_bullet_self;
+    HTIMER generate_bullet_enemy;
 
     //初期化
     for( i = 0; i < 8; i++ )
@@ -172,6 +174,8 @@ void mainLoop( void )
     SET_TIMER( target_timer );
     SET_TIMER( bullet_timer );
     SET_TIMER( generate_target_timer );
+    SET_TIMER( generate_bullet_self );
+    SET_TIMER( generate_bullet_enemy );
 
     //60秒間ループ
     while( PASSED_TIME( main_timer ) < 60000 )
@@ -193,8 +197,9 @@ void mainLoop( void )
         updateMouseState();
 
         //自分の弾を生成
-        if( self_mouse.click_left && self_mouse.click_left_pass == FALSE && self_mouse.click_right == FALSE )
+        if( self_mouse.click_left && self_mouse.click_left_pass == FALSE && self_mouse.click_right == FALSE && PASSED_TIME( generate_bullet_self ) > 200 )
         {
+            SET_TIMER( generate_bullet_self );
             for( i = 0; i < MAX_BULLET_NUM; i++ )
             {
                 if( bullet[ i ].isExist == FALSE )
@@ -210,8 +215,9 @@ void mainLoop( void )
         }
 
         //敵の弾を生成
-        if( bullet_enemy_generate && enemy_mouse.click_right == FALSE )
+        if( bullet_enemy_generate && enemy_mouse.click_right == FALSE && PASSED_TIME( generate_bullet_enemy ) )
         {
+            SET_TIMER( generate_bullet_enemy );
             for( i = 0; i < MAX_BULLET_NUM; i++ )
             {
                 if( bullet[ i ].isExist == FALSE )
